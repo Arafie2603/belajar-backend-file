@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import usersRoute from './src/routes/usersRoute';
 import cors from 'cors';
 import prisma from './prisma';
@@ -6,7 +6,7 @@ import prisma from './prisma';
 const app = express();
 
 app.use(cors({
-    origin: '*',  // Atau spesifik domain yang diizinkan
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));

@@ -18,7 +18,7 @@ const cors_1 = __importDefault(require("cors"));
 const prisma_1 = __importDefault(require("./prisma"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
-    origin: '*', // Atau spesifik domain yang diizinkan
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
