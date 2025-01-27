@@ -22,6 +22,9 @@ app.use((0, cors_1.default)({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
+app.get('/api/hello', (req, res) => {
+    res.json({ message: 'Hello, world!' });
+});
 app.use(express_1.default.json());
 app.use('/api/users', usersRoute_1.default);
 process.on('SIGINT', () => __awaiter(void 0, void 0, void 0, function* () {

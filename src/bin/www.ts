@@ -2,7 +2,7 @@ import app from '../../app';
 import http from 'http';
 import debug from 'debug';
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 const host = process.env.HOST || 'localhost';
 app.set('port', port);
 
