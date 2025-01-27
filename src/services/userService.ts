@@ -41,7 +41,7 @@ export class userService {
     }
 
     static async register(request: CreateUserRequest): Promise<UserResponse> {
-        console.log("Received request:", request); // Tambahkan log ini
+        console.log("Received request:", request); // Logging request
         const registerRequest = Validation.validate(userValidation.REGISTER, request);
     
         const totalUserWithSameUsername = await prismaClient.user.count({
@@ -68,14 +68,13 @@ export class userService {
                 role: true,
             },
         });
-    
+
+        console.log("User created:", user); // Logging created user
         return toUserResponse(user);
     }
-    
-    
-    
 
     static async login(request: LoginUserRequest): Promise<UserResponse> {
+        console.log("Received login request:", request); // Logging request
         const loginRequest = Validation.validate(userValidation.LOGIN, request);
     
         const user = await prismaClient.user.findUnique({
@@ -96,9 +95,8 @@ export class userService {
         if (!isPasswordValid) {
             throw new responseError(401, "Email or password is wrong");
         }
-    
+
+        console.log("User logged in:", user); // Logging logged in user
         return toUserResponse(user);
     }
-    
-    
 }

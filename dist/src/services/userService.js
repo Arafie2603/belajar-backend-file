@@ -65,7 +65,7 @@ class userService {
     }
     static register(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("Received request:", request); // Tambahkan log ini
+            console.log("Received request:", request); // Logging request
             const registerRequest = validation_1.Validation.validate(userValidation_1.userValidation.REGISTER, request);
             const totalUserWithSameUsername = yield database_1.prismaClient.user.count({
                 where: {
@@ -83,11 +83,13 @@ class userService {
                     role: true,
                 },
             });
+            console.log("User created:", user); // Logging created user
             return (0, userModel_1.toUserResponse)(user);
         });
     }
     static login(request) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log("Received login request:", request); // Logging request
             const loginRequest = validation_1.Validation.validate(userValidation_1.userValidation.LOGIN, request);
             const user = yield database_1.prismaClient.user.findUnique({
                 where: {
@@ -104,6 +106,7 @@ class userService {
             if (!isPasswordValid) {
                 throw new responseError_1.responseError(401, "Email or password is wrong");
             }
+            console.log("User logged in:", user); // Logging logged in user
             return (0, userModel_1.toUserResponse)(user);
         });
     }

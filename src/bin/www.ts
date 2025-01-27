@@ -1,17 +1,25 @@
 import app from '../../app';
 import http from 'http';
 import debug from 'debug';
+import usersRoute from '../routes/usersRoute';
+import cors from 'cors';
+
+
 
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || 'localhost';
 app.set('port', port);
-
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 const server = http.createServer(app);
 
 server.listen({ port: Number(port), host }, () => {
     console.log(`Server running on http://${host}:${port}`);
 });
-
+app.use('/api/users', usersRoute);
 server.on('error', onError);
 server.on('listening', onListening);
 

@@ -18,6 +18,7 @@ export class usersController {
                 message: 'Users retrieved successfully',
             });
         } catch (error: any) {
+            console.error("Error retrieving users:", error);
             res.status(500).json({
                 status: 500,
                 errors: error.message,
@@ -28,6 +29,7 @@ export class usersController {
     static async register(req: Request, res: Response, next: NextFunction) {
         try {
             const request: CreateUserRequest = req.body as CreateUserRequest;
+            console.log("Register attempt:", request); // Logging request
             const response = await userService.register(request);
             res.status(201).json({
                 data: response,
@@ -35,6 +37,7 @@ export class usersController {
                 message: 'User created successfully'
             });
         } catch (error: any) {
+            console.error("Error registering user:", error); // Logging error
             if (error.status === 400) {
                 res.status(400).json({
                     status: 400,
@@ -53,13 +56,15 @@ export class usersController {
     static async login(req: Request, res: Response, next: NextFunction) {
         try {
             const request: LoginUserRequest = req.body as LoginUserRequest;
-            const user = await userService.login(request); // Perbaikan di sini
+            console.log("Login attempt:", req.body); // Logging request
+            const user = await userService.login(request);
             res.status(200).json({
-                data: user, // Sesuaikan respons di sini
+                data: user,
                 status: 200,
                 message: 'Successfully logged in'
             });
         } catch (error: any) {
+            console.error("Error logging in:", error); // Logging error
             if (error.status === 401) {
                 res.status(401).json({
                     status: 401,

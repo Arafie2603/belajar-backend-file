@@ -28,6 +28,7 @@ class usersController {
                 });
             }
             catch (error) {
+                console.error("Error retrieving users:", error);
                 res.status(500).json({
                     status: 500,
                     errors: error.message,
@@ -39,6 +40,7 @@ class usersController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const request = req.body;
+                console.log("Register attempt:", request); // Logging request
                 const response = yield userService_1.userService.register(request);
                 res.status(201).json({
                     data: response,
@@ -47,6 +49,7 @@ class usersController {
                 });
             }
             catch (error) {
+                console.error("Error registering user:", error); // Logging error
                 if (error.status === 400) {
                     res.status(400).json({
                         status: 400,
@@ -67,14 +70,16 @@ class usersController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const request = req.body;
-                const user = yield userService_1.userService.login(request); // Perbaikan di sini
+                console.log("Login attempt:", req.body); // Logging request
+                const user = yield userService_1.userService.login(request);
                 res.status(200).json({
-                    data: user, // Sesuaikan respons di sini
+                    data: user,
                     status: 200,
                     message: 'Successfully logged in'
                 });
             }
             catch (error) {
+                console.error("Error logging in:", error); // Logging error
                 if (error.status === 401) {
                     res.status(401).json({
                         status: 401,

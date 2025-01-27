@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/bin/www.js",
-    "dev": "nodemon --watch . --ext ts --exec ts-node ./src/bin/www.ts"
+    "dev": "nodemon --watch . --ext ts --exec ts-node ./src/bin/www.ts",
+    "postinstall": "prisma generate"
   },
   "author": "",
   "license": "ISC",

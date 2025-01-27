@@ -4,6 +4,7 @@ import usersRoute from './src/routes/usersRoute';
 import prisma from './prisma';
 
 const app = express();
+app.use(express.json());
 
 app.use(cors({
     origin: '*',
@@ -11,7 +12,11 @@ app.use(cors({
     credentials: true
 }));
 
-app.use(express.json());
+app.use((req, res, next) => {
+    console.log('Request Body:', req.body); // Log request body
+    next();
+});
+
 
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello, world!' });

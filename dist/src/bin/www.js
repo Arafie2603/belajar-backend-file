@@ -6,13 +6,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("../../app"));
 const http_1 = __importDefault(require("http"));
 const debug_1 = __importDefault(require("debug"));
+const usersRoute_1 = __importDefault(require("../routes/usersRoute"));
+const cors_1 = __importDefault(require("cors"));
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || 'localhost';
 app_1.default.set('port', port);
+app_1.default.use((0, cors_1.default)({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 const server = http_1.default.createServer(app_1.default);
 server.listen({ port: Number(port), host }, () => {
     console.log(`Server running on http://${host}:${port}`);
 });
+app_1.default.use('/api/users', usersRoute_1.default);
 server.on('error', onError);
 server.on('listening', onListening);
 function normalizePort(val) {

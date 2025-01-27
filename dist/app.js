@@ -17,12 +17,16 @@ const cors_1 = __importDefault(require("cors"));
 const usersRoute_1 = __importDefault(require("./src/routes/usersRoute"));
 const prisma_1 = __importDefault(require("./prisma"));
 const app = (0, express_1.default)();
+app.use(express_1.default.json());
 app.use((0, cors_1.default)({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
-app.use(express_1.default.json());
+app.use((req, res, next) => {
+    console.log('Request Body:', req.body); // Log request body
+    next();
+});
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello, world!' });
 });
