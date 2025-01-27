@@ -5,7 +5,7 @@ import cors from 'cors';
 import prisma from './prisma';
 const app = express();
 app.use(cors({
-    origin: '*', // Atau specific origin
+    origin: '*',  // Atau spesifik domain yang diizinkan
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
