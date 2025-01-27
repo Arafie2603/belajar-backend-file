@@ -11,9 +11,6 @@ app.use(cors({
     credentials: true
 }));
 
-app.get('/api/hello', (req, res) => {
-    res.json({ message: 'Hello, world!' });
-});
 
 app.use(express.json());
 app.use('/api/users', usersRoute);

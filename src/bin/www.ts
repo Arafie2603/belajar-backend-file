@@ -6,9 +6,6 @@ const port = process.env.PORT || 3000;
 const host = process.env.HOST || 'localhost';
 app.set('port', port);
 
-app.get('/api/hello', (req, res) => {
-    res.json({ message: 'Hello, world!' });
-});
 const server = http.createServer(app);
 
 server.listen({ port: Number(port), host }, () => {
