@@ -2,20 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/api/app.ts",
+      "src": "src/bin/www.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "src/api/app.ts",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
-        "Access-Control-Allow-Credentials": "true"
-      }
+      "src": "/(.*)",
+      "dest": "src/bin/www.ts"
     }
   ]
 }

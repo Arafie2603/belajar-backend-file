@@ -4,8 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",  
+    "start": "node dist/bin/www.js", 
     "dev": "nodemon --watch . --ext ts --exec ts-node ./src/bin/www.ts"
   },
+
   "author": "",
   "license": "ISC",
   "dependencies": {
