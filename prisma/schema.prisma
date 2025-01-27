@@ -13,7 +13,64 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  username String @id @db.VarChar(100)
-  password String @db.VarChar(100)
+model Role {
+  role_id String @id @default(uuid())
+  nama String? @db.VarChar(100)
+  created_at DateTime @default(now())
+  users User[]
 }
+
+model User {
+  id_user String @id @db.VarChar(100)
+  password String @db.VarChar(100)
+  createdAt   DateTime      @default(now())
+  role_id String
+  role Role @relation(fields: [role_id], references: [role_id], onUpdate: Cascade, onDelete: Cascade)
+  surat_keluar SuratKeluar[]
+  surat_masuk SuratMasuk[]
+}
+
+model SuratKeluar {
+  no_surat_keluar String @id
+  tanggal_surat DateTime
+  tempat_surat String @db.VarChar(100)
+  lampiran String @db.VarChar(100)
+  isi_surat String @db.VarChar(100)
+  penerima String @db.VarChar(100)
+  pengirim String @db.VarChar(100)
+  jabatan_pengirim String @db.VarChar(100)
+  gambar String 
+  keterangan_gambar String @db.VarChar(100)
+  user_id String
+  kategori String
+  sifat_surat String
+  user User @relation(fields: [user_id], references: [id_user], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Disposisi {
+  id_disposisi String @id
+  tanggal_penyelesaian DateTime
+  isi_disposisi String
+  diteruskan_kepada String
+  suratMasuk SuratMasuk[]
+}
+
+model SuratMasuk {
+  no_surat_masuk String @id
+  tanggal DateTime
+  alamat String @db.VarChar(100)
+  perihal String @db.VarChar(100)
+  tujuan String
+  organisasi String
+  pengirim String
+  penerima String
+  sifat_surat String
+  scan_surat String
+  expired_data DateTime
+  user_id String
+  disposisi_id String
+  user User @relation(fields: [user_id], references: [id_user], onUpdate: Cascade, onDelete: Cascade)
+  disposisi Disposisi @relation(fields: [disposisi_id], references: [id_disposisi], onUpdate: Cascade, onDelete: Cascade)
+}
+
+

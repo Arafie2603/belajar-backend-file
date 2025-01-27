@@ -1,0 +1,14 @@
+{
+    "watch": [
+        "bin",
+        "app.ts",
+        "routes",
+        "models",
+        "config"
+    ],
+    "ext": "ts",
+    "ignore": [
+    "dist/*"
+    ],
+    "exec": "ts-node ./bin/www.ts"
+}
