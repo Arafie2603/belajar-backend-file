@@ -4,15 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",  
-    "start": "node dist/bin/www.js", 
+    "build": "tsc",
+    "start": "node dist/bin/www.js",
     "dev": "nodemon --watch . --ext ts --exec ts-node ./src/bin/www.ts"
   },
-
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.2.1",
+    "@vercel/node": "^5.0.2",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "debug": "^4.4.0",
@@ -30,6 +30,7 @@
     "@types/debug": "^4.1.12",
     "@types/decimal.js": "^0.0.32",
     "@types/express": "^5.0.0",
+    "@types/node": "^22.10.10",
     "prisma": "^6.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
