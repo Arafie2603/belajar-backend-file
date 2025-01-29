@@ -2,6 +2,8 @@ import app from '../../app';
 import http from 'http';
 import debug from 'debug';
 import usersRoute from '../routes/usersRoute';
+import suratsRoute from '../../src/routes/suratmasukRoute';
+
 import cors from 'cors';
 
 
@@ -20,6 +22,8 @@ server.listen({ port: Number(port), host }, () => {
     console.log(`Server running on http://${host}:${port}`);
 });
 app.use('/api/users', usersRoute);
+app.use('/api/surats', suratsRoute);
+
 server.on('error', onError);
 server.on('listening', onListening);
 

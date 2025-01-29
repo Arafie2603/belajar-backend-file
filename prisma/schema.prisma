@@ -47,14 +47,6 @@ model SuratKeluar {
   user User @relation(fields: [user_id], references: [id_user], onDelete: Cascade, onUpdate: Cascade)
 }
 
-model Disposisi {
-  id_disposisi String @id
-  tanggal_penyelesaian DateTime
-  isi_disposisi String
-  diteruskan_kepada String
-  suratMasuk SuratMasuk[]
-}
-
 model SuratMasuk {
   no_surat_masuk String @id
   tanggal DateTime
@@ -67,10 +59,11 @@ model SuratMasuk {
   sifat_surat String
   scan_surat String
   expired_data DateTime
+  diteruskan_kepada String
+  tanggal_penyelesaian String
+  isi_disposisi String
   user_id String
-  disposisi_id String
   user User @relation(fields: [user_id], references: [id_user], onUpdate: Cascade, onDelete: Cascade)
-  disposisi Disposisi @relation(fields: [disposisi_id], references: [id_disposisi], onUpdate: Cascade, onDelete: Cascade)
 }
 
 

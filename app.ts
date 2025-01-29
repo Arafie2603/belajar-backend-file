@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import usersRoute from './src/routes/usersRoute';
+import suratsRoute from './src/routes/suratmasukRoute';
 import prisma from './prisma';
 
 const app = express();
@@ -12,17 +13,13 @@ app.use(cors({
     credentials: true
 }));
 
-app.use((req, res, next) => {
-    console.log('Request Body:', req.body); // Log request body
-    next();
-});
-
 
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello, world!' });
 });
 
 app.use('/api/users', usersRoute);
+app.use('/api/surat', suratsRoute);
 
 process.on('SIGINT', async () => {
     await prisma.$disconnect();

@@ -56,15 +56,18 @@ export class usersController {
     static async login(req: Request, res: Response, next: NextFunction) {
         try {
             const request: LoginUserRequest = req.body as LoginUserRequest;
-            console.log("Login attempt:", req.body); // Logging request
-            const user = await userService.login(request);
+            console.log("Login attempt:", req.body);
+            const response = await userService.login(request);
             res.status(200).json({
-                data: user,
+                data: {
+                    user: response.user,
+                    token: response.token
+                },
                 status: 200,
                 message: 'Successfully logged in'
             });
         } catch (error: any) {
-            console.error("Error logging in:", error); // Logging error
+            console.error("Error logging in:", error);
             if (error.status === 401) {
                 res.status(401).json({
                     status: 401,
