@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { suratmasukService } from '../services/suratmasukService';
 
 export class suratmasukController {
-   // In suratmasukController
 static async createSuratmasuk(req: Request, res: Response): Promise<void> {
     try {
         if (!req.user) {
@@ -12,6 +11,8 @@ static async createSuratmasuk(req: Request, res: Response): Promise<void> {
             });
             return;
         }
+
+        console.log('Authenticate user: ', req.user);
 
         if (!req.file) {
             res.status(400).json({
@@ -25,7 +26,7 @@ static async createSuratmasuk(req: Request, res: Response): Promise<void> {
         const suratMasuk = await suratmasukService.createSuratmasuk(
             req.body, 
             req.file,
-            req.user.id_user // Pass the authenticated user's ID
+            req.user.id_user 
         );
 
         res.status(201).json({

@@ -10,8 +10,17 @@ export class suratmasukService {
         file: Express.Multer.File,
         userId: string
     ): Promise<SuratmasukResponseWithoutDispoisi> {
+        const user = await prismaClient.user.findUnique({
+            where: { id_user: userId}
+        });
+
+        if (!user) {
+            throw new Error(`User with ID ${userId} not found`);
+        }
+
         const modifiedRequest = {
             ...request,
+            user_id: userId,
             tanggal: new Date(JSON.parse(request.tanggal)).toISOString(),
             expired_data: new Date(JSON.parse(request.expired_data)).toISOString()
         };

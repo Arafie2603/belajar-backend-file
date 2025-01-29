@@ -41,7 +41,7 @@ export class userService {
         }
     }
 
-    static async register(request: CreateUserRequest): Promise<UserResponse> {
+    static async register(request: CreateUserRequest): Promise<{ user: UserResponse, token: string}> {
         console.log("Received request:", request); 
         const registerRequest = Validation.validate(userValidation.REGISTER, request);
     
@@ -69,9 +69,14 @@ export class userService {
                 role: true,
             },
         });
+        const token = createToken(user);
 
         console.log("User created:", user); 
-        return toUserResponse(user);
+        return {
+            user: toUserResponse(user),
+            token,
+            
+        }
     }
 
     static async login(request: LoginUserRequest): Promise<{user: UserResponse, token: string}> {
@@ -100,7 +105,7 @@ export class userService {
     
         return {
             user: toUserResponse(user),
-            token
+            token,
         };
     }
 
