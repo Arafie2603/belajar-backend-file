@@ -17,9 +17,6 @@ export class userService {
                 skip,
                 take,
                 include: { role: true },
-                orderBy: {
-                    createdAt: 'desc',
-                }
             }),
             prismaClient.user.count()
         ]);
@@ -47,7 +44,7 @@ export class userService {
     
         const totalUserWithSameUsername = await prismaClient.user.count({
             where: {
-                id_user: registerRequest.id_user,
+                id: registerRequest.id,
             },
         });
     
@@ -84,7 +81,7 @@ export class userService {
     
         const user = await prismaClient.user.findUnique({
             where: {
-                id_user: loginRequest.id_user,
+                nomor_identitas: loginRequest.nomor_identitas,
             },
             include: {
                 role: true,
@@ -109,5 +106,34 @@ export class userService {
         };
     }
 
-    
+    static async updateUser(userId: string, request: Partial<CreateUserRequest>): Promise<UserResponse> {
+        const updateRequest = Validation.validate(userValidation.UPDATE, request);
+
+        if (updateRequest.password) {
+            updateRequest.password = await bcrypt.hash(updateRequest.password, 10);
+        }
+
+        const { role_id, ...userData } = updateRequest;
+        const user = await prismaClient.user.update({
+            where: {
+                id: userId,
+            },
+            data: {
+                ...userData,
+                role_id: role_id ? { connect: { role_id: role_id } } : undefined,
+            },
+            include: {
+                role: true,
+            },
+        });
+        return toUserResponse(user);
+    }
+
+    static async deleteUser(userId: string): Promise<void> {
+        await prismaClient.user.delete({
+            where: {
+                id: userId,
+            }
+        });
+    }
 }

@@ -82,4 +82,39 @@ export class usersController {
             }
         }
     }
+
+    static async updateUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id_user } = req.params
+            const updateUser = await userService.updateUser(id_user, req.body);
+            res.status(200).json({
+                data: updateUser,
+                status: 200,
+                message: 'User updated successfully',
+            });
+        } catch (error: any) {
+            res.status(error.status || 500).json({
+                status: error.status || 500,
+                message: error.message,
+                errors: error.errors || null,
+            });
+        }
+    }
+
+    static async deleteUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id_user } = req.params;
+            await userService.deleteUser(id_user);
+            res.status(200).json({
+                status: 200,
+                message: 'User deleted successfully',
+            });
+        } catch (error: any) {
+            res.status(error.status || 500).json({
+                status: error.status || 500,
+                message: error.message,
+                errors: error.errors || null,
+            });
+        }
+    }
 }

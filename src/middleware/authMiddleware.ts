@@ -6,7 +6,7 @@ declare global {
     namespace Express {
         interface Request {
             user?: {
-                id_user: string;
+                id: string;
                 role: {
                     role_id: string;
                     nama: string;
@@ -21,7 +21,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 export const createToken = (user: any) => {
     return jwt.sign(
         { 
-            id_user: user.id_user,
+            id: user.id,
             role: {
                 role_id: user.role.role_id,
                 nama: user.role.nama
@@ -47,7 +47,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
         const decoded = jwt.verify(token, JWT_SECRET) as any;
         
         req.user = {
-            id_user: decoded.id_user,
+            id: decoded.id,
             role: decoded.role
         };
         

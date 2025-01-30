@@ -21,7 +21,8 @@ model Role {
 }
 
 model User {
-  id_user String @id @db.VarChar(100)
+  id String @id @default(uuid())
+  nomor_identitas String @unique @db.VarChar(100)
   password String @db.VarChar(100)
   createdAt   DateTime      @default(now())
   role_id String
@@ -44,7 +45,7 @@ model SuratKeluar {
   user_id String
   kategori String
   sifat_surat String
-  user User @relation(fields: [user_id], references: [id_user], onDelete: Cascade, onUpdate: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model SuratMasuk {
@@ -63,7 +64,7 @@ model SuratMasuk {
   tanggal_penyelesaian String
   isi_disposisi String
   user_id String
-  user User @relation(fields: [user_id], references: [id_user], onUpdate: Cascade, onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
 

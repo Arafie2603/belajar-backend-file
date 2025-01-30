@@ -11,7 +11,7 @@ export class suratmasukService {
         userId: string
     ): Promise<SuratmasukResponseWithoutDispoisi> {
         const user = await prismaClient.user.findUnique({
-            where: { id_user: userId}
+            where: { id: userId}
         });
 
         if (!user) {
@@ -74,7 +74,7 @@ export class suratmasukService {
 
                 user: {
                     connect: {
-                        id_user: validationRequest.user_id // assuming your user's unique identifier is 'id_user'
+                        id: validationRequest.user_id // assuming your user's unique identifier is 'id_user'
                     }
                 },
             },

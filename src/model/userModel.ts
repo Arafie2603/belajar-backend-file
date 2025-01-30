@@ -1,7 +1,8 @@
 import { Prisma } from "@prisma/client";
 
 export type UserResponse = {
-    id_user: string;
+    id: string,
+    nomor_identitas: string;
     password: string;
     role?: string | null;
 };
@@ -21,13 +22,13 @@ export interface PaginatedResponse<T> {
 };
 
 export type CreateUserRequest = {
-    id_user: string;
+    nomor_identitas: string;
     password: string;
     role_id?: string; 
 };
 
 export type LoginUserRequest = {
-    id_user: string;
+    nomor_identitas: string;
     password: string;
 };
 
@@ -37,7 +38,8 @@ type UserWithRole = Prisma.UserGetPayload<{
 
 export function toUserResponse(user: UserWithRole): UserResponse {
     return {
-        id_user: user.id_user,
+        id: user.id,
+        nomor_identitas: user.nomor_identitas,
         password: user.password || "",
         role: user.role?.nama, 
     };

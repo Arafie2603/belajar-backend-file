@@ -26,7 +26,7 @@ static async createSuratmasuk(req: Request, res: Response): Promise<void> {
         const suratMasuk = await suratmasukService.createSuratmasuk(
             req.body, 
             req.file,
-            req.user.id_user 
+            req.user.id 
         );
 
         res.status(201).json({
