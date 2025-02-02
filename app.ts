@@ -38,7 +38,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: '/',
+                url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
                 description: 'Current Server'
             }
         ],
@@ -49,18 +49,39 @@ const swaggerOptions = {
             { name: 'product' },
         ],
     },
-    apis: [path.join(__dirname, './src/routes/*.ts')]
+    apis: ['./src/routes/*.ts']
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(swaggerSpec, {
+const swaggerUiOptions = {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: "E-Filling API Documentation",
+    customfavIcon: "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/favicon-32x32.png",
     swaggerOptions: {
         persistAuthorization: true,
+        displayRequestDuration: true,
+        docExpansion: 'none',
+        filter: true,
     },
-    customSiteTitle: "E-Filling API Documentation"
-}));
+    explorer: true
+};
+
+app.use('/api-docs', swaggerUi.serve);
+app.get('/api-docs', swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+
+// Serve Swagger assets
+app.get('/swagger-ui.css', (req, res) => {
+    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css');
+});
+
+app.get('/swagger-ui-bundle.js', (req, res) => {
+    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js');
+});
+
+app.get('/swagger-ui-standalone-preset.js', (req, res) => {
+    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js');
+});
 
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello, world!' });
