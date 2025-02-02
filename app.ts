@@ -49,7 +49,12 @@ const swaggerOptions = {
             { name: 'product' },
         ],
     },
-    apis: [path.join(__dirname, './src/routes/*.ts')]
+    apis: [
+        // Menambahkan path absolut ke file routes
+        path.resolve(__dirname, './src/routes/*.ts'),
+        path.resolve(__dirname, './src/routes/*.js'), // Tambahkan ini untuk file yang sudah di-compile
+        path.resolve(__dirname, 'app.ts'), // Menambahkan app.ts untuk route /api/hello
+    ]
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
