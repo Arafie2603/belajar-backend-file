@@ -58,7 +58,7 @@ export class userService {
     
         const user = await prismaClient.user.create({
             data: {
-                id_user: uuidv4(),
+                id: uuidv4(),
                 ...userData,
                 role: role_id ? { connect: { role_id } } : { create: { role_id: uuidv4(), nama: 'user' } },
             },

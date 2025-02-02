@@ -19,6 +19,5 @@ export class suratmasukValidation {
             .refine((date) => !isNaN(Date.parse(date)), {
                 message: "Invalid date format"
             }),
-        user_id: z.string().nonempty("User ID harus diisi"),
     });
 }
