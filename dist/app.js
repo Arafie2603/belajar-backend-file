@@ -19,6 +19,7 @@ const suratmasukRoute_1 = __importDefault(require("./src/routes/suratmasukRoute"
 const prisma_1 = __importDefault(require("./prisma"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
+const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 const corsOptions = {
@@ -73,18 +74,13 @@ const swaggerUiOptions = {
     },
     explorer: true
 };
-app.use('/api-docs', swagger_ui_express_1.default.serve);
-app.get('/api-docs', swagger_ui_express_1.default.setup(swaggerSpec, swaggerUiOptions));
-// Serve Swagger assets
-app.get('/swagger-ui.css', (req, res) => {
-    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css');
-});
-app.get('/swagger-ui-bundle.js', (req, res) => {
-    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js');
-});
-app.get('/swagger-ui-standalone-preset.js', (req, res) => {
-    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js');
-});
+// Serve Swagger UI static files directly from the installed package
+app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerSpec, swaggerUiOptions));
+// Serve Swagger UI static files
+app.use('/api-docs/swagger-ui.css', express_1.default.static(path_1.default.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui.css')));
+app.use('/api-docs/swagger-ui-bundle.js', express_1.default.static(path_1.default.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui-bundle.js')));
+app.use('/api-docs/swagger-ui-standalone-preset.js', express_1.default.static(path_1.default.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui-standalone-preset.js')));
+app.use('/api-docs/swagger-ui-init.js', express_1.default.static(path_1.default.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui-init.js')));
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello, world!' });
 });

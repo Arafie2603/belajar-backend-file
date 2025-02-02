@@ -5,6 +5,7 @@ import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
+
 /**
  * @swagger
  * components:
@@ -77,7 +78,7 @@ const router = express.Router();
  *     summary: Membuat surat masuk baru
  *     tags: [Surat Masuk]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -119,12 +120,16 @@ const router = express.Router();
  *     responses:
  *       201:
  *         description: Surat masuk berhasil dibuat
- *
+ */
+
+/**
+ * @swagger
+ * /api/surat/{no_surat_masuk}:
  *   patch:
  *     summary: Update surat masuk
  *     tags: [Surat Masuk]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: no_surat_masuk
@@ -140,12 +145,16 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Surat masuk berhasil diupdate
- *
+ */
+
+/**
+ * @swagger
+ * /api/surat/{no_surat_masuk}:
  *   delete:
  *     summary: Hapus surat masuk
  *     tags: [Surat Masuk]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: no_surat_masuk
@@ -156,6 +165,7 @@ const router = express.Router();
  *       200:
  *         description: Surat masuk berhasil dihapus
  */
+
 
 router.post('/', upload.single('scan_surat'), authMiddleware ,suratmasukController.createSuratmasuk);
 router.patch('/:no_surat_masuk', upload.single('scan_surat'), authMiddleware, suratmasukController.updateSuratmasuk);
