@@ -67,21 +67,14 @@ const swaggerUiOptions = {
     explorer: true
 };
 
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+// Serve Swagger UI static files directly from the installed package
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
-// Serve Swagger assets
-app.get('/swagger-ui.css', (req, res) => {
-    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css');
-});
-
-app.get('/swagger-ui-bundle.js', (req, res) => {
-    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js');
-});
-
-app.get('/swagger-ui-standalone-preset.js', (req, res) => {
-    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js');
-});
+// Serve Swagger UI static files
+app.use('/api-docs/swagger-ui.css', express.static(path.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui.css')));
+app.use('/api-docs/swagger-ui-bundle.js', express.static(path.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui-bundle.js')));
+app.use('/api-docs/swagger-ui-standalone-preset.js', express.static(path.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui-standalone-preset.js')));
+app.use('/api-docs/swagger-ui-init.js', express.static(path.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui-init.js')));
 
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello, world!' });
