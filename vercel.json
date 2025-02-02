@@ -12,6 +12,7 @@
       "destination": "src/bin/www.ts"
     }
   ],
+
   "headers": [
     {
       "source": "/api/(.*)",
