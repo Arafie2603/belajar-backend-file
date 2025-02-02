@@ -74,9 +74,8 @@ const swaggerUiOptions = {
     },
     explorer: true
 };
-// Serve Swagger UI static files directly from the installed package
 app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerSpec, swaggerUiOptions));
-// Serve Swagger UI static files
+// Serve Swagger UI static files directly from the installed package
 app.use('/api-docs/swagger-ui.css', express_1.default.static(path_1.default.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui.css')));
 app.use('/api-docs/swagger-ui-bundle.js', express_1.default.static(path_1.default.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui-bundle.js')));
 app.use('/api-docs/swagger-ui-standalone-preset.js', express_1.default.static(path_1.default.join(__dirname, 'node_modules/swagger-ui-dist/swagger-ui-standalone-preset.js')));
@@ -94,4 +93,7 @@ process.on('SIGTERM', () => __awaiter(void 0, void 0, void 0, function* () {
     yield prisma_1.default.$disconnect();
     process.exit(0);
 }));
+// Logging untuk membantu debugging
+console.log('Swagger Spec:', JSON.stringify(swaggerSpec, null, 2));
+console.log('Routes Loaded:', app._router.stack.map((r) => r.route && r.route.path));
 exports.default = app;

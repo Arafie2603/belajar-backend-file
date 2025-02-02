@@ -49,7 +49,7 @@ const swaggerOptions = {
             { name: 'product' },
         ],
     },
-    apis: ['./src/routes/*.ts']
+    apis: [path.join(__dirname, './src/routes/*.ts')]
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);

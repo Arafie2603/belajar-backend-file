@@ -79,7 +79,7 @@ const router = express_1.default.Router();
  *     summary: Membuat surat masuk baru
  *     tags: [Surat Masuk]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -121,12 +121,15 @@ const router = express_1.default.Router();
  *     responses:
  *       201:
  *         description: Surat masuk berhasil dibuat
- *
+ */
+/**
+ * @swagger
+ * /api/surat/{no_surat_masuk}:
  *   patch:
  *     summary: Update surat masuk
  *     tags: [Surat Masuk]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: no_surat_masuk
@@ -142,12 +145,15 @@ const router = express_1.default.Router();
  *     responses:
  *       200:
  *         description: Surat masuk berhasil diupdate
- *
+ */
+/**
+ * @swagger
+ * /api/surat/{no_surat_masuk}:
  *   delete:
  *     summary: Hapus surat masuk
  *     tags: [Surat Masuk]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: no_surat_masuk
