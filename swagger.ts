@@ -22,12 +22,14 @@ const options = {
         }],
         servers: [
             {
-                url: 'http://localhost:3000',
-                description: 'Development server',
+                url: process.env.NODE_ENV === 'production'
+                    ? 'https://your-vercel-app-name.vercel.app'
+                    : 'http://localhost:3000',
+                description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
             },
         ],
     },
-    apis: ['./src/routes/*.ts', './src/models/*.ts'], // Path ke file yang berisi dokumentasi
+    apis: ['./src/routes/*.ts', './src/models/*.ts'],
 };
 
 export const specs = swaggerJsdoc(options);
