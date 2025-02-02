@@ -7,6 +7,7 @@ const app_1 = __importDefault(require("../../app"));
 const http_1 = __importDefault(require("http"));
 const debug_1 = __importDefault(require("debug"));
 const usersRoute_1 = __importDefault(require("../routes/usersRoute"));
+const suratmasukRoute_1 = __importDefault(require("../../src/routes/suratmasukRoute"));
 const cors_1 = __importDefault(require("cors"));
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || 'localhost';
@@ -21,6 +22,7 @@ server.listen({ port: Number(port), host }, () => {
     console.log(`Server running on http://${host}:${port}`);
 });
 app_1.default.use('/api/users', usersRoute_1.default);
+app_1.default.use('/api/surats', suratmasukRoute_1.default);
 server.on('error', onError);
 server.on('listening', onListening);
 function normalizePort(val) {

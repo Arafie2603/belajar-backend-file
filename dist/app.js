@@ -15,22 +15,81 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const usersRoute_1 = __importDefault(require("./src/routes/usersRoute"));
+const suratmasukRoute_1 = __importDefault(require("./src/routes/suratmasukRoute"));
 const prisma_1 = __importDefault(require("./prisma"));
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
-app.use((0, cors_1.default)({
+const corsOptions = {
     origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
-}));
-app.use((req, res, next) => {
-    console.log('Request Body:', req.body); // Log request body
-    next();
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+};
+app.use((0, cors_1.default)(corsOptions));
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'E-Filling API Documentation',
+            version: '1.0.0',
+            description: 'Documentation for E-Filling REST API'
+        },
+        components: {
+            securitySchemes: {
+                BearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+            },
+        },
+        servers: [
+            {
+                url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
+                description: 'Current Server'
+            }
+        ],
+        tags: [
+            { name: 'home' },
+            { name: 'auth' },
+            { name: 'users' },
+            { name: 'product' },
+        ],
+    },
+    apis: ['./src/routes/*.ts']
+};
+const swaggerSpec = (0, swagger_jsdoc_1.default)(swaggerOptions);
+const swaggerUiOptions = {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: "E-Filling API Documentation",
+    customfavIcon: "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/favicon-32x32.png",
+    swaggerOptions: {
+        persistAuthorization: true,
+        displayRequestDuration: true,
+        docExpansion: 'none',
+        filter: true,
+    },
+    explorer: true
+};
+app.use('/api-docs', swagger_ui_express_1.default.serve);
+app.get('/api-docs', swagger_ui_express_1.default.setup(swaggerSpec, swaggerUiOptions));
+// Serve Swagger assets
+app.get('/swagger-ui.css', (req, res) => {
+    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css');
+});
+app.get('/swagger-ui-bundle.js', (req, res) => {
+    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js');
+});
+app.get('/swagger-ui-standalone-preset.js', (req, res) => {
+    res.redirect('https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js');
 });
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello, world!' });
 });
 app.use('/api/users', usersRoute_1.default);
+app.use('/api/surat', suratmasukRoute_1.default);
 process.on('SIGINT', () => __awaiter(void 0, void 0, void 0, function* () {
     yield prisma_1.default.$disconnect();
     process.exit(0);

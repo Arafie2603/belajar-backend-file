@@ -31,6 +31,7 @@ const validation_1 = require("../validation/validation");
 const database_1 = require("../application/database");
 const responseError_1 = require("../error/responseError");
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const authMiddleware_1 = require("../middleware/authMiddleware");
 class userService {
     static getAllUsers() {
         return __awaiter(this, arguments, void 0, function* (page = 1, totalData = 10) {
@@ -41,9 +42,6 @@ class userService {
                     skip,
                     take,
                     include: { role: true },
-                    orderBy: {
-                        createdAt: 'desc',
-                    }
                 }),
                 database_1.prismaClient.user.count()
             ]);
@@ -65,11 +63,11 @@ class userService {
     }
     static register(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("Received request:", request); // Logging request
+            console.log("Received request:", request);
             const registerRequest = validation_1.Validation.validate(userValidation_1.userValidation.REGISTER, request);
             const totalUserWithSameUsername = yield database_1.prismaClient.user.count({
                 where: {
-                    id_user: registerRequest.id_user,
+                    id: registerRequest.id,
                 },
             });
             if (totalUserWithSameUsername !== 0) {
@@ -78,22 +76,25 @@ class userService {
             registerRequest.password = yield bcrypt_1.default.hash(registerRequest.password, 10);
             const { role_id } = registerRequest, userData = __rest(registerRequest, ["role_id"]);
             const user = yield database_1.prismaClient.user.create({
-                data: Object.assign(Object.assign({ id_user: (0, uuid_1.v4)() }, userData), { role: role_id ? { connect: { role_id } } : { create: { role_id: (0, uuid_1.v4)(), nama: 'user' } } }),
+                data: Object.assign(Object.assign({ id: (0, uuid_1.v4)() }, userData), { role: role_id ? { connect: { role_id } } : { create: { role_id: (0, uuid_1.v4)(), nama: 'user' } } }),
                 include: {
                     role: true,
                 },
             });
-            console.log("User created:", user); // Logging created user
-            return (0, userModel_1.toUserResponse)(user);
+            const token = (0, authMiddleware_1.createToken)(user);
+            console.log("User created:", user);
+            return {
+                user: (0, userModel_1.toUserResponse)(user),
+                token,
+            };
         });
     }
     static login(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("Received login request:", request); // Logging request
             const loginRequest = validation_1.Validation.validate(userValidation_1.userValidation.LOGIN, request);
             const user = yield database_1.prismaClient.user.findUnique({
                 where: {
-                    id_user: loginRequest.id_user,
+                    nomor_identitas: loginRequest.nomor_identitas,
                 },
                 include: {
                     role: true,
@@ -106,8 +107,39 @@ class userService {
             if (!isPasswordValid) {
                 throw new responseError_1.responseError(401, "Email or password is wrong");
             }
-            console.log("User logged in:", user); // Logging logged in user
+            const token = (0, authMiddleware_1.createToken)(user);
+            return {
+                user: (0, userModel_1.toUserResponse)(user),
+                token,
+            };
+        });
+    }
+    static updateUser(userId, request) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const updateRequest = validation_1.Validation.validate(userValidation_1.userValidation.UPDATE, request);
+            if (updateRequest.password) {
+                updateRequest.password = yield bcrypt_1.default.hash(updateRequest.password, 10);
+            }
+            const { role_id } = updateRequest, userData = __rest(updateRequest, ["role_id"]);
+            const user = yield database_1.prismaClient.user.update({
+                where: {
+                    id: userId,
+                },
+                data: Object.assign(Object.assign({}, userData), { role_id: role_id ? { connect: { role_id: role_id } } : undefined }),
+                include: {
+                    role: true,
+                },
+            });
             return (0, userModel_1.toUserResponse)(user);
+        });
+    }
+    static deleteUser(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield database_1.prismaClient.user.delete({
+                where: {
+                    id: userId,
+                }
+            });
         });
     }
 }
