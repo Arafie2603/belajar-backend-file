@@ -47,10 +47,9 @@ const swaggerOptions = {
             { name: 'auth' },
             { name: 'users' },
             { name: 'product' },
-            { name: 'Surat Masuk' }  // Tambahkan tag ini untuk memastikan surat masuk
         ],
     },
-    apis: ['./src/routes/*.ts']
+    apis: [path.join(__dirname, './src/routes/*.ts')]
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -96,8 +95,5 @@ process.on('SIGTERM', async () => {
 // Logging untuk membantu debugging
 console.log('Swagger Spec:', JSON.stringify(swaggerSpec, null, 2));
 console.log('Routes Loaded:', app._router.stack.map((r: any) => r.route && r.route.path));
-
-// Tambahkan logging untuk memeriksa environment variables
-console.log('Vercel URL:', process.env.VERCEL_URL);
 
 export default app;
