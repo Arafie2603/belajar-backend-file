@@ -5,24 +5,20 @@ import suratmasukRoute from './src/routes/suratmasukRoute';
 import prisma from './prisma';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import path from 'path';
 
 const app = express();
 app.use(express.json());
 
-// Konfigurasi CORS
 const corsOptions = {
-    origin: [
-        'http://localhost:3000',
-        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
-    ],
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    origin: '*',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
 };
 
 app.use(cors(corsOptions));
 
-// Konfigurasi Swagger
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
@@ -42,8 +38,8 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
-                description: 'API Server'
+                url: '/',
+                description: 'Current Server'
             }
         ],
         tags: [
@@ -53,15 +49,19 @@ const swaggerOptions = {
             { name: 'product' },
         ],
     },
-    apis: ['./dist/src/routes/*.js'] // Point to compiled JS files
+    apis: [path.join(__dirname, './src/routes/*.ts')]
 };
 
-const swaggerDocs = swaggerJsdoc(swaggerOptions);
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-// Setup Swagger UI tanpa custom CSS/JS
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/api-docs', swaggerUi.serve);
+app.get('/api-docs', swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: {
+        persistAuthorization: true,
+    },
+    customSiteTitle: "E-Filling API Documentation"
+}));
 
-// Your routes
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello, world!' });
 });
@@ -69,7 +69,6 @@ app.get('/api/hello', (req, res) => {
 app.use('/api/users', usersRoute);
 app.use('/api/surat', suratmasukRoute);
 
-// Prisma disconnect handlers
 process.on('SIGINT', async () => {
     await prisma.$disconnect();
     process.exit(0);
