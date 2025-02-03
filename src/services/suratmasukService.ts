@@ -5,6 +5,7 @@ import { CreateSuratmasukRequest, PaginatedResponse, SuratmasukResponseWithoutDi
 import { suratmasukValidation } from "../validation/suratmasukValidation";
 import { Validation } from "../validation/validation";
 import { v4 as uuidv4 } from 'uuid';
+
 export class suratmasukService {
     static async getAllSuratMasuk(
         page: number = 1,
