@@ -1,6 +1,20 @@
 import { SuratMasuk } from "@prisma/client";
 import prisma from "../../prisma";
 
+// Define a PaginatedResponse type
+export type PaginatedResponse<T> = {
+    data: T[];
+    meta: {
+        currentPage: number;
+        offset: number;
+        itemsPerPage: number;
+        unpaged: boolean;
+        totalPages: number;
+        totalItems: number;
+        sortBy: any[];
+        filter: any;
+    };
+};
 export type CreateSuratmasukRequest = {
     no_surat_masuk: string;
     tanggal: string;  
@@ -14,6 +28,7 @@ export type CreateSuratmasukRequest = {
     scan_surat: string;
     expired_data: string;  
     user_id: string;
+    kategori: string;
     diteruskan_kepada: string;
     tanggal_penyelesaian: string;
     isi_disposisi: string;

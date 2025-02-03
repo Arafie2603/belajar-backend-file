@@ -25,6 +25,38 @@ export class usersController {
             });
         }
     }
+    static async getProfile(req: Request, res: Response, next: NextFunction) {
+        try {
+            const authRequest = req.user?.id;
+            if (authRequest) {
+                const userProfile = await userService.getUserById(authRequest);
+                res.status(200).json({
+                    data: toUserResponse(userProfile),
+                    status: 200,
+                    message: 'Profile retrieved successfully',
+                });
+            } else {
+                res.status(400).json({
+                    status: 400,
+                    message: "Profile user not found",
+                });
+            }
+        } catch (error: any) {
+            console.error("Error retrieving profile:", error); // Tambahkan log error
+            if (error.status === 404) {
+                res.status(404).json({
+                    status: 404,
+                    message: error.message,
+                });
+            } else {
+                res.status(500).json({
+                    status: 500,
+                    message: 'Internal Server Error',
+                    errors: error.message || null,
+                });
+            }
+        }
+    }
 
     static async register(req: Request, res: Response, next: NextFunction) {
         try {
@@ -85,13 +117,20 @@ export class usersController {
 
     static async updateUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id_user } = req.params
-            const updateUser = await userService.updateUser(id_user, req.body);
+            const { nomor_identitas } = req.params
+            const updateUser = await userService.updateUser(nomor_identitas, req.body);
             res.status(200).json({
                 data: updateUser,
                 status: 200,
                 message: 'User updated successfully',
             });
+
+            if (!updateUser) {
+                res.status(404).json({
+                    status: 404,
+                    message: "Nomor identitas not found"
+                });
+            }
         } catch (error: any) {
             res.status(error.status || 500).json({
                 status: error.status || 500,
@@ -103,18 +142,26 @@ export class usersController {
 
     static async deleteUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id_user } = req.params;
-            await userService.deleteUser(id_user);
+            const { nomor_identitas } = req.params;
+            await userService.deleteUser(nomor_identitas);
+
             res.status(200).json({
                 status: 200,
                 message: 'User deleted successfully',
             });
         } catch (error: any) {
-            res.status(error.status || 500).json({
-                status: error.status || 500,
-                message: error.message,
-                errors: error.errors || null,
-            });
+            console.error("Error deleting user:", error); // Tambahkan log error
+            if (error.status === 404) {
+                res.status(404).json({
+                    status: 404,
+                    message: error.message,
+                });
+            } else {
+                res.status(500).json({
+                    status: 500,
+                    message: 'Internal Server Error',
+                });
+            }
         }
     }
 }

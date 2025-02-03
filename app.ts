@@ -42,18 +42,12 @@ const swaggerOptions = {
                 description: 'Current Server'
             }
         ],
-        tags: [
-            { name: 'home' },
-            { name: 'auth' },
-            { name: 'users' },
-            { name: 'product' },
-        ],
     },
     apis: [
         // Menambahkan path absolut ke file routes
         path.resolve(__dirname, './src/routes/*.ts'),
-        path.resolve(__dirname, './src/routes/*.js'), // Tambahkan ini untuk file yang sudah di-compile
-        path.resolve(__dirname, 'app.ts'), // Menambahkan app.ts untuk route /api/hello
+        path.resolve(__dirname, './src/routes/*.js'), 
+        path.resolve(__dirname, 'app.ts'), 
     ]
 };
 
@@ -97,8 +91,8 @@ process.on('SIGTERM', async () => {
     process.exit(0);
 });
 
-// Logging untuk membantu debugging
-console.log('Swagger Spec:', JSON.stringify(swaggerSpec, null, 2));
-console.log('Routes Loaded:', app._router.stack.map((r: any) => r.route && r.route.path));
+// // Logging untuk membantu debugging
+// console.log('Swagger Spec:', JSON.stringify(swaggerSpec, null, 2));
+// console.log('Routes Loaded:', app._router.stack.map((r: any) => r.route && r.route.path));
 
 export default app;

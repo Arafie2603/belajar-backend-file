@@ -2,7 +2,6 @@ import { z, ZodType } from 'zod';
 
 export class suratmasukValidation {
     static readonly SuratmasukValidation: ZodType = z.object({
-        no_surat_masuk: z.string().nonempty("Nomor surat masuk harus diisi"),
         tanggal: z.string()
             .refine((date) => !isNaN(Date.parse(date)), {
                 message: "Invalid date format"

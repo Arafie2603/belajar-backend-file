@@ -1,7 +1,61 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, response, Response } from 'express';
 import { suratmasukService } from '../services/suratmasukService';
 
 export class suratmasukController {
+
+    static async getAllSuratmasuk(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string) || 1;
+            const totalData = parseInt(req.query.totalData as string) || 10;
+            const tujuan = req.query.tujuan as string | undefined;
+            const kategori = req.query.kategori as string | undefined;
+            const isAvailable = req.query.isAvailable as string | undefined;
+
+            const response = await suratmasukService.getAllSuratMasuk(page, totalData, kategori, tujuan);
+
+            res.status(200).json({
+                data: {
+                    paginatedData: response.data,
+                    meta: response.meta,
+                },
+                status: 200,
+                message: 'Surat masuk retrieved successfully',
+            });
+        } catch (error: any) {
+            res.status(500).json({
+                data: response,
+                errors: error.message || null,
+            });
+        }
+    }
+
+    static async getSuratmasukById(req: Request, res: Response) {
+        try {
+            const no_surat_masuk: string = req.params.no_surat_masuk;
+
+            console.log(no_surat_masuk)
+            const suratmasuk = await suratmasukService.getSuratmasukById(no_surat_masuk);
+
+            if (suratmasuk) {
+                res.status(200).json({
+                    status: 200,
+                    data: suratmasuk,
+                    message: 'Surat masuk retrieved successfully',
+                });
+            } else {
+                res.status(400).json({
+                    status: 400,
+                    message: 'Surat masuk not found'
+                });
+            }
+        } catch (error: any) {
+            res.status(500).json({
+                data: response,
+                errors: error.message || null,
+            });
+        }
+    }
+
     static async createSuratmasuk(req: Request, res: Response): Promise<void> {
         try {
             if (!req.user) {
@@ -52,6 +106,7 @@ export class suratmasukController {
             const file = req.file || null; 
             
             console.log("Request Body:", req.body); // Tambahkan log untuk debugging
+
             
             const updatedSuratmasuk = await suratmasukService.updateSuratmasuk(
                 no_surat_masuk,
@@ -59,6 +114,13 @@ export class suratmasukController {
                 file,
                 userId
             );
+
+            if (!updatedSuratmasuk) {
+                res.status(400).json({
+                    status: 200,
+                    message: `Surat masuk with ID ${no_surat_masuk} $`
+                });
+            }
             
             res.status(200).json({
                 status: 'success',
@@ -67,20 +129,22 @@ export class suratmasukController {
         } catch (error: any) {
             console.error("Update Error:", error); // Tambahkan log error
             res.status(500).json({
-                status: 'error',
+                status: 500,
                 message: error.message
             });
         }
     }
     static async deleteSuratmasuk(req: Request, res: Response) {
         try {
-            const { suratmasukId } = req.params;
-
-            await suratmasukService.deleteSuratmasuk(suratmasukId);
-            res.status(200).json({ message: 'Suratmasuk deleted successfully' });
+            const { no_surat_masuk } = req.params;
+            await suratmasukService.deleteSuratmasuk(no_surat_masuk);
+            res.status(200).json({ 
+                status: 200,
+                message: 'Suratmasuk deleted successfully',
+            });
         } catch (error: any) {
             res.status(500).json({
-                status: 'error',
+                status: 500,
                 message: error.message
             });
         }

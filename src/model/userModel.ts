@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 export type UserResponse = {
     id: string,
     nomor_identitas: string;
+    nama: string;
     password: string;
     role?: string | null;
 };
@@ -32,13 +33,15 @@ export type LoginUserRequest = {
     password: string;
 };
 
-type UserWithRole = Prisma.UserGetPayload<{
+export type UserWithRole = Prisma.UserGetPayload<{
     include: { role: true };
 }>;
+
 
 export function toUserResponse(user: UserWithRole): UserResponse {
     return {
         id: user.id,
+        nama: user.nama,
         nomor_identitas: user.nomor_identitas,
         password: user.password || "",
         role: user.role?.nama, 

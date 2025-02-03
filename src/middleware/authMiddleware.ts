@@ -16,7 +16,18 @@ declare global {
     }
 }
 
+export interface AuthenticatedRequest extends Request {
+    user?: {
+        id: string;
+        role: {
+            role_id: string;
+            nama: string;
+        }
+    };
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const TOKEN_EXPIRY = '24h'; // Konstanta untuk masa berlaku token
 
 export const createToken = (user: any) => {
     return jwt.sign(
@@ -28,7 +39,7 @@ export const createToken = (user: any) => {
             }
         },
         JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: TOKEN_EXPIRY }
     );
 };
 
@@ -57,5 +68,21 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
             status: 401,
             message: 'Invalid token'
         });
+    }
+};
+
+export const refreshJWT = (req: AuthenticatedRequest, res: Response) => {
+    const authHeader = req.header('Authorization');
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, JWT_SECRET, (err, user) => {
+            if (err) {
+                return res.status(403).json({ message: 'Forbidden' });
+            }
+            const newToken = jwt.sign({ user }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+            res.json({ token: newToken });
+        });
+    } else {
+        res.status(401).json({ message: 'Unauthorized' });
     }
 };

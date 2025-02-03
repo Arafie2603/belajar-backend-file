@@ -23,6 +23,7 @@ model Role {
 model User {
   id String @id @default(uuid())
   nomor_identitas String @unique @db.VarChar(100)
+  nama String
   password String @db.VarChar(100)
   createdAt   DateTime      @default(now())
   role_id String
@@ -54,6 +55,7 @@ model SuratMasuk {
   alamat String @db.VarChar(100)
   perihal String @db.VarChar(100)
   tujuan String
+  kategori String
   organisasi String
   pengirim String
   penerima String

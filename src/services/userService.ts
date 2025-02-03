@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { CreateUserRequest, LoginUserRequest, PaginatedResponse, toUserResponse, UserResponse } from "../model/userModel";
+import { CreateUserRequest, LoginUserRequest, PaginatedResponse, toUserResponse, UserResponse, UserWithRole } from "../model/userModel";
 import { userValidation } from "../validation/userValidation";
 import { Validation } from "../validation/validation";
 import { prismaClient } from "../application/database";
@@ -38,24 +38,42 @@ export class userService {
         }
     }
 
-    static async register(request: CreateUserRequest): Promise<{ user: UserResponse, token: string}> {
-        console.log("Received request:", request); 
+    static async getUserById(id: string): Promise<UserWithRole> {
+        const user = await prismaClient.user.findUnique({
+            where: {
+                id: id,
+            },
+            include: {
+                role: true,
+            }
+        });
+
+        if (!user) {
+            throw new responseError(404, "User Not Found");
+        }
+        return user;
+    }
+
+
+    static async register(request: CreateUserRequest): Promise<{ user: UserResponse, token: string }> {
+        console.log("Received request:", request);
         const registerRequest = Validation.validate(userValidation.REGISTER, request);
-    
+
         const totalUserWithSameUsername = await prismaClient.user.count({
             where: {
-                id: registerRequest.id,
+                nomor_identitas: registerRequest.nomor_identitas,
+                nama: registerRequest.nama
             },
         });
-    
+
         if (totalUserWithSameUsername !== 0) {
-            throw new responseError(400, "Email already exists");
+            throw new responseError(400, "Nomor identitas already exists");
         }
-    
+
         registerRequest.password = await bcrypt.hash(registerRequest.password, 10);
-    
+
         const { role_id, ...userData } = registerRequest;
-    
+
         const user = await prismaClient.user.create({
             data: {
                 id: uuidv4(),
@@ -68,17 +86,17 @@ export class userService {
         });
         const token = createToken(user);
 
-        console.log("User created:", user); 
+        console.log("User created:", user);
         return {
             user: toUserResponse(user),
             token,
-            
+
         }
     }
 
-    static async login(request: LoginUserRequest): Promise<{user: UserResponse, token: string}> {
+    static async login(request: LoginUserRequest): Promise<{ user: UserResponse, token: string }> {
         const loginRequest = Validation.validate(userValidation.LOGIN, request);
-    
+
         const user = await prismaClient.user.findUnique({
             where: {
                 nomor_identitas: loginRequest.nomor_identitas,
@@ -87,36 +105,45 @@ export class userService {
                 role: true,
             },
         });
-    
+
         if (!user) {
             throw new responseError(401, "Email or password is wrong");
         }
-    
+
         const isPasswordValid = await bcrypt.compare(loginRequest.password, user.password);
-    
+
         if (!isPasswordValid) {
             throw new responseError(401, "Email or password is wrong");
         }
-    
+
         const token = createToken(user);
-    
+
         return {
             user: toUserResponse(user),
             token,
         };
     }
 
-    static async updateUser(userId: string, request: Partial<CreateUserRequest>): Promise<UserResponse> {
+    static async updateUser(nomor_identitas: string, request: Partial<CreateUserRequest>): Promise<UserResponse> {
         const updateRequest = Validation.validate(userValidation.UPDATE, request);
 
+        const checkedUser = await prismaClient.user.findUnique({
+            where: { 
+                nomor_identitas: nomor_identitas
+            }
+        })
         if (updateRequest.password) {
             updateRequest.password = await bcrypt.hash(updateRequest.password, 10);
         }
 
-        const { role_id, ...userData } = updateRequest;
+        if (!checkedUser) {
+            throw new responseError(404, "Nomor identitas not found");
+        }
+
+        const { role_id, password, ...userData } = updateRequest;
         const user = await prismaClient.user.update({
             where: {
-                id: userId,
+                nomor_identitas: nomor_identitas,
             },
             data: {
                 ...userData,
@@ -126,13 +153,21 @@ export class userService {
                 role: true,
             },
         });
+
         return toUserResponse(user);
     }
 
-    static async deleteUser(userId: string): Promise<void> {
+    static async deleteUser(nomor_identitas: string): Promise<void> {
+        const checkedUser = await prismaClient.user.findUnique({
+            where: { nomor_identitas: nomor_identitas },
+        });
+
+        if (!checkedUser) {
+            throw new responseError(404, "Nomor identitas not found");
+        }
         await prismaClient.user.delete({
             where: {
-                id: userId,
+                nomor_identitas: nomor_identitas,
             }
         });
     }
