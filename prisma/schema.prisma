@@ -30,6 +30,35 @@ model User {
   role Role @relation(fields: [role_id], references: [role_id], onUpdate: Cascade, onDelete: Cascade)
   surat_keluar SuratKeluar[]
   surat_masuk SuratMasuk[]
+  notulen Notulen[]
+}
+
+model Notulen {
+  id String @id @default(uuid())
+  judul String 
+  tanggal_rapat DateTime
+  lokasi String
+  pemimpin_rapat String
+  peserta String
+  agenda String
+  dokumen_lampiran String
+  status String
+  updated_by String
+  created_by String
+  user_id String
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model NomorSurat {
+  nomor_surat String @id 
+  keterangan String
+  deskripsi String
+}
+
+model Faktur {
+  id String @id @default(uuid())
+  bukti_pembayaran String
+  createdAt DateTime @default(now())
 }
 
 model SuratKeluar {
@@ -54,7 +83,7 @@ model SuratMasuk {
   tanggal DateTime
   alamat String @db.VarChar(100)
   perihal String @db.VarChar(100)
-  tujuan String
+  tujuan String 
   kategori String
   organisasi String
   pengirim String
