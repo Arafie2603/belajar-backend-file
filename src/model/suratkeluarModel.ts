@@ -16,7 +16,7 @@ export type PaginatedResponse<T> = {
 };
 
 export type CreateSuratkeluarRequest = {
-    no_surat_keluar: string;
+    id: string;
     tanggal_surat: string;
     tempat_surat: string;
     lampiran: string;
@@ -26,12 +26,13 @@ export type CreateSuratkeluarRequest = {
     jabatan_pengirim: string;
     gambar: string;
     keterangan_gambar: string;
-    kategori: string;
     sifat_surat: string;
+    surat_nomor: string; // Tambahkan ini jika belum ada
+    keterangan: string;
 };
 
 export type SuratkeluarResponse = {
-    no_surat_keluar: string;
+    id: string;
     tanggal_surat: Date;
     tempat_surat: string;
     lampiran: string;
@@ -41,14 +42,14 @@ export type SuratkeluarResponse = {
     jabatan_pengirim: string;
     gambar: string;
     keterangan_gambar: string;
-    kategori: string;
     sifat_surat: string;
     user_id: string;
+    surat_nomor: string; // Tambahkan ini jika belum ada
 };
 
 export function toSuratkeluarReponse(suratKeluar: SuratKeluar): SuratkeluarResponse {
     return {
-        no_surat_keluar: suratKeluar.no_surat_keluar,
+        id: suratKeluar.id,
         tanggal_surat: suratKeluar.tanggal_surat,
         tempat_surat: suratKeluar.tempat_surat,
         lampiran: suratKeluar.lampiran,
@@ -58,9 +59,9 @@ export function toSuratkeluarReponse(suratKeluar: SuratKeluar): SuratkeluarRespo
         jabatan_pengirim: suratKeluar.jabatan_pengirim,
         gambar: suratKeluar.gambar,
         keterangan_gambar: suratKeluar.keterangan_gambar,
-        kategori: suratKeluar.kategori,
         sifat_surat: suratKeluar.sifat_surat,
         user_id: suratKeluar.user_id,
+        surat_nomor: suratKeluar.surat_nomor,
     }
 }
 

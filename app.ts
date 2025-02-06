@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import usersRoute from './src/routes/usersRoute';
 import suratmasukRoute from './src/routes/suratmasukRoute';
+import suratkeluarRoute from './src/routes/suratkeluarRoute';
 import prisma from './prisma';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
@@ -79,7 +80,8 @@ app.get('/api/hello', (req, res) => {
 });
 
 app.use('/api/users', usersRoute);
-app.use('/api/surat', suratmasukRoute);
+app.use('/api/surat-masuk', suratmasukRoute);
+app.use('/api/surat-keluar', suratkeluarRoute);
 
 process.on('SIGINT', async () => {
     await prisma.$disconnect();

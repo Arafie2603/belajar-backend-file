@@ -55,14 +55,16 @@ model Faktur {
   bukti_pembayaran String
   createdAt DateTime @default(now())
 }
-// model NomorSurat {
-//   nomor_surat String @id 
-//   keterangan String
-//   deskripsi String
-// }
+model NomorSurat {
+  nomor_surat String @id 
+  kategori String
+  keterangan String
+  deskripsi String
+  suratKeluar SuratKeluar[]
+}
 
 model SuratKeluar {
-  no_surat_keluar String @id
+  id String @id 
   tanggal_surat DateTime
   tempat_surat String @db.VarChar(100)
   lampiran String @db.VarChar(100)
@@ -72,9 +74,10 @@ model SuratKeluar {
   jabatan_pengirim String @db.VarChar(100)
   gambar String 
   keterangan_gambar String @db.VarChar(100)
-  user_id String
-  kategori String
   sifat_surat String
+  user_id String
+  surat_nomor String
+  nomorSurat NomorSurat @relation(fields: [surat_nomor], references: [nomor_surat], onDelete: Cascade, onUpdate: Cascade)
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
