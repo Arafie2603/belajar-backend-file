@@ -49,17 +49,17 @@ model Notulen {
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
-model NomorSurat {
-  nomor_surat String @id 
-  keterangan String
-  deskripsi String
-}
 
 model Faktur {
   id String @id @default(uuid())
   bukti_pembayaran String
   createdAt DateTime @default(now())
 }
+// model NomorSurat {
+//   nomor_surat String @id 
+//   keterangan String
+//   deskripsi String
+// }
 
 model SuratKeluar {
   no_surat_keluar String @id
