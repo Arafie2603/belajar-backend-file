@@ -31,6 +31,19 @@ export type CreateSuratkeluarRequest = {
     keterangan: string;
 };
 
+export type UpdateSuratkeluarRequest = {
+    tanggal_surat?: Date;
+    tempat_surat?: string;
+    lampiran?: string;
+    isi_surat?: string;
+    penerima?: string;
+    pengirim?: string;
+    jabatan_pengirim?: string;
+    keterangan_gambar?: string;
+    sifat_surat?: string;
+    gambar?: string;
+};
+
 export type SuratkeluarResponse = {
     id: string;
     tanggal_surat: Date;

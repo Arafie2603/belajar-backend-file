@@ -1,15 +1,72 @@
 import { PrismaClient } from "@prisma/client";
 import { responseError } from "../error/responseError";
 import { MINIO_ENDPOINT, MINIO_PORT, minioClient } from "../helper/minioClient";
-import { CreateSuratkeluarRequest, SuratkeluarResponse } from "../model/suratkeluarModel";
+import { CreateSuratkeluarRequest, SuratkeluarResponse, toSuratkeluarReponse, UpdateSuratkeluarRequest } from "../model/suratkeluarModel";
 import { suratkeluarValidation } from "../validation/suratkeluarValidation";
 import { Validation } from "../validation/validation";
 import { v4 as uuidv4 } from 'uuid';
+import { PaginatedResponse } from "../model/suratmasukModel";
 
 
 const prismaClient = new PrismaClient();
 
 export class SuratKeluarService {
+    static async getAllSuratKeluar(
+        page: number = 1,
+        totalData: number = 10,
+        sifat_surat?: string,
+    ): Promise<PaginatedResponse<SuratkeluarResponse>> {
+        const skip = (page - 1) * totalData;
+        const take = totalData;
+        const where: any = {};
+
+        if (sifat_surat) {
+            where.sifat_surat = {
+                contains: sifat_surat,
+            };
+        }
+
+        const [suratKeluar, totalItems] = await Promise.all([
+            prismaClient.suratKeluar.findMany({
+                skip,
+                take,
+                where,
+                orderBy: {
+                    tanggal_surat: 'desc',
+                }
+            }),
+            prismaClient.suratKeluar.count({ where }),
+        ]);
+
+        const totalPages = Math.ceil(totalItems / totalData);
+
+        return {
+            data: suratKeluar.map(sm => toSuratkeluarReponse(sm)),
+            meta: {
+                currentPage: page,
+                offset: skip,
+                itemsPerPage: totalData,
+                unpaged: false,
+                totalPages,
+                totalItems,
+                sortBy: [],
+                filter: {},
+            }
+        };
+    }
+
+    static async getSuratkeluarById(id: string): Promise<SuratkeluarResponse | null> {
+        const suratKeluar = await prismaClient.suratKeluar.findUnique({
+            where: { id },
+        });
+
+        if (suratKeluar) {
+            return toSuratkeluarReponse(suratKeluar);
+        } else {
+            return null
+        }
+    }
+
     static async createSuratkeluar(
         request: CreateSuratkeluarRequest,
         file: Express.Multer.File,
@@ -77,24 +134,22 @@ export class SuratKeluarService {
                 S: "S",
             };
 
-            const prefix = prefixMap[validationRequest.keterangan] || "XX"; // Default "XX" jika tidak cocok
+            const prefix = prefixMap[validationRequest.keterangan] || "XX";
 
             // Format nomor surat sesuai aturan
             const nomorSuratFormat = `${prefix}/UBL/LAB/${newNomorSuratNumber}/${month}/${year}`;
 
             // Gunakan transaction untuk memastikan NomorSurat dan SuratKeluar dibuat bersamaan
             const result = await prismaClient.$transaction(async (tx) => {
-                // 1. Buat NomorSurat terlebih dahulu
                 const nomorSurat = await tx.nomorSurat.create({
                     data: {
                         nomor_surat: nomorSuratFormat,
-                        kategori: validationRequest.kategori || "Umum",
+                        kategori: validationRequest.kategori,
                         keterangan: validationRequest.keterangan,
-                        deskripsi: "Nomor surat untuk surat keluar",
+                        deskripsi: validationRequest.deskripsi,
                     },
                 });
-            
-                // 2. Buat SuratKeluar dengan referensi ke NomorSurat yang baru dibuat
+
                 const suratkeluar = await tx.suratKeluar.create({
                     data: {
                         id: uuidv4(),
@@ -112,7 +167,7 @@ export class SuratKeluarService {
                         surat_nomor: nomorSuratFormat
                     },
                 });
-            
+
                 return { nomorSurat, suratkeluar };
             });
 
@@ -121,5 +176,71 @@ export class SuratKeluarService {
             console.error("Error saat membuat surat keluar:", error);
             throw new responseError(500, "Gagal membuat surat keluar");
         }
+    }
+
+    static async updateSuratkeluar(
+        suratKeluarId: string,
+        request: UpdateSuratkeluarRequest,
+        file?: Express.Multer.File
+    ) {
+        const existingSuratKeluar = await prismaClient.suratKeluar.findUnique({
+            where: { id: suratKeluarId }
+        });
+
+        if (!existingSuratKeluar) {
+            throw new responseError(404, `Surat Keluar with ID ${suratKeluarId} not found`);
+        }
+
+        const validationRequest = Validation.validate(
+            suratkeluarValidation.UpdateSuratkeluarValidation,
+            request
+        );
+
+        // Handle file upload if provided
+        let fileUrl = existingSuratKeluar.gambar;
+        if (file) {
+            const bucketName = "suratkeluar";
+            const filename = `${file.originalname}`;
+
+            const bucketExists = await minioClient.bucketExists(bucketName);
+            if (!bucketExists) {
+                await minioClient.makeBucket(bucketName, "us-east-1");
+            }
+
+            await minioClient.putObject(bucketName, filename, file.buffer);
+            fileUrl = `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${bucketName}/${filename}`;
+        }
+
+        const updateData = {
+            ...validationRequest,
+            gambar: fileUrl
+        };
+
+        Object.keys(updateData).forEach(key =>
+            updateData[key] === undefined && delete updateData[key]
+        );
+
+        const updatedSuratKeluar = await prismaClient.suratKeluar.update({
+            where: { id: suratKeluarId },
+            data: updateData
+        });
+
+        return toSuratkeluarReponse(updatedSuratKeluar);
+    }
+
+    static async deleteSuratkeluar(
+        id: string
+    ): Promise<void> {
+        const suratkeluar = await prismaClient.suratKeluar.findUnique({
+            where: { id: id },
+        });
+
+        if (!suratkeluar) {
+            throw new Error(`Surat masuk with ID ${id} not found`);
+        }
+
+        await prismaClient.suratKeluar.delete({
+            where: { id: id },
+        });
     }
 }

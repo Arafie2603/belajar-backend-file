@@ -17,5 +17,34 @@ export class suratkeluarValidation {
         sifat_surat: z.string().min(3, "Sifat surat minimal harus 3 huruf").max(100, "Sifat surat tidak boleh lebih dari 100 karakter"),
         keterangan: z.string().min(2, "Keteraangan minimal harus 2 huruf").max(10),
         deskripsi: z.string().min(3, "deskripsi minimal harus 3 huruf").max(100, "deskripsi tidak boleh lebih dari 100 karakter"),
+        kategori: z.string().max(100, "Kategori tidak boleh lebih dari 100 karakter"),
     });
+
+    static readonly UpdateSuratkeluarValidation: ZodType = z.object({
+        tanggal_surat: z.date().optional(),
+        tempat_surat: z.string()
+            .max(100, "Tempat surat tidak boleh lebih dari 100 karakter")
+            .optional(),
+        lampiran: z.string()
+            .max(100, "Lampiran tidak boleh lebih dari 100 karakter")
+            .optional(),
+        isi_surat: z.string()
+            .nonempty("Isi surat harus diisi")
+            .optional(),
+        penerima: z.string()
+            .nonempty("Penerima harus diisi")
+            .optional(),
+        pengirim: z.string()
+            .nonempty("Pengirim harus diisi")
+            .optional(),
+        jabatan_pengirim: z.string()
+            .nonempty("Jabatan pengirim harus diisi")
+            .optional(),
+        gambar: z.string().optional(),
+        keterangan_gambar: z.string().optional(),
+        sifat_surat: z.string()
+            .min(3, "Sifat surat minimal harus 3 huruf")
+            .max(100, "Sifat surat tidak boleh lebih dari 100 karakter")
+            .optional()
+    }).partial();
 }
