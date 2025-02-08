@@ -105,6 +105,100 @@ const router = express.Router();
 router.get('/', authMiddleware, suratkeluarController.getAllSuratkeluar);
 
 
+/**
+ * @swagger
+ * /api/surat-keluar/{id}:
+ *   get:
+ *     summary: "Mengambil surat keluar berdasarkan ID"
+ *     tags:
+ *       - Surat Keluar
+ *     description: "Mengambil detail surat keluar berdasarkan ID yang diberikan"
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID surat keluar"
+ *     responses:
+ *       200:
+ *         description: "Surat keluar berhasil diambil"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     tanggal_surat:
+ *                       type: string
+ *                       format: date-time
+ *                     tempat_surat:
+ *                       type: string
+ *                     lampiran:
+ *                       type: string
+ *                     isi_surat:
+ *                       type: string
+ *                     penerima:
+ *                       type: string
+ *                     pengirim:
+ *                       type: string
+ *                     jabatan_pengirim:
+ *                       type: string
+ *                     gambar:
+ *                       type: string
+ *                     keterangan_gambar:
+ *                       type: string
+ *                     sifat_surat:
+ *                       type: string
+ *                     user_id:
+ *                       type: string
+ *                     surat_nomor:
+ *                       type: string
+ *                 message:
+ *                   type: string
+ *                   example: "Surat masuk retrieved successfully"
+ *             example:
+ *               status: 200
+ *               data: 
+ *                 id: "000a60a2-6cf7-42f4-9328-ff1b6a551183"
+ *                 tanggal_surat: "2025-01-10T00:00:00.000Z"
+ *                 tempat_surat: "Jakarta"
+ *                 lampiran: "Lampir"
+ *                 isi_surat: "Isian"
+ *                 penerima: "Ara"
+ *                 pengirim: "Aralasia"
+ *                 jabatan_pengirim: "Programmer"
+ *                 gambar: "http://192.168.1.18:9000/suratkeluar/images.jpeg"
+ *                 keterangan_gambar: "Ini gambar"
+ *                 sifat_surat: "Sangat Penting"
+ *                 user_id: "510ff921-b6ca-4b6d-b916-a69dad29df99"
+ *                 surat_nomor: "SA/UBL/LAB/4/02/25"
+ *               message: "Surat masuk retrieved successfully"
+ *       404:
+ *         description: "Surat masuk tidak ditemukan"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "Surat masuk not found"
+ *       500:
+ *         description: "Internal Server Error"
+ */
 
 router.get('/:id', authMiddleware, suratkeluarController.getSuratmasukById);
 /**

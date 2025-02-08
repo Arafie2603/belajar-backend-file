@@ -1,7 +1,25 @@
 import { NomorSurat } from "@prisma/client";
 
-export type createNomorSurat = {
+export type PaginatedResponse<T> = {
+    data: T[];
+    meta: {
+        currentPage: number;
+        offset: number;
+        itemsPerPage: number;
+        unpaged: boolean;
+        totalPages: number;
+        totalItems: number;
+        sortBy: any[];
+        filter: any;
+    };
+};
+
+export type CreateNomorSurat = {
     nomor_surat: string;
+    keterangan: string;
+    deskripsi: string;
+};
+export type UpdateNomorSuraRequest = {
     keterangan: string;
     deskripsi: string;
 };

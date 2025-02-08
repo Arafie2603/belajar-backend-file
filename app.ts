@@ -3,14 +3,23 @@ import cors from 'cors';
 import usersRoute from './src/routes/usersRoute';
 import suratmasukRoute from './src/routes/suratmasukRoute';
 import suratkeluarRoute from './src/routes/suratkeluarRoute';
+import nomorsuratRoute from './src/routes/nomorsuratRoute';
 import prisma from './prisma';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
+import bodyParser from 'body-parser';
 
 const app = express();
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+});
 const corsOptions = {
     origin: '*',
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -82,6 +91,7 @@ app.get('/api/hello', (req, res) => {
 app.use('/api/users', usersRoute);
 app.use('/api/surat-masuk', suratmasukRoute);
 app.use('/api/surat-keluar', suratkeluarRoute);
+app.use('/api/nomor-surat', nomorsuratRoute);
 
 process.on('SIGINT', async () => {
     await prisma.$disconnect();

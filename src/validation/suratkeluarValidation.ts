@@ -17,7 +17,6 @@ export class suratkeluarValidation {
         sifat_surat: z.string().min(3, "Sifat surat minimal harus 3 huruf").max(100, "Sifat surat tidak boleh lebih dari 100 karakter"),
         keterangan: z.string().min(2, "Keteraangan minimal harus 2 huruf").max(10),
         deskripsi: z.string().min(3, "deskripsi minimal harus 3 huruf").max(100, "deskripsi tidak boleh lebih dari 100 karakter"),
-        kategori: z.string().max(100, "Kategori tidak boleh lebih dari 100 karakter"),
     });
 
     static readonly UpdateSuratkeluarValidation: ZodType = z.object({
