@@ -67,7 +67,7 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 const swaggerUiOptions = {
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: "E-Filling API Documentation",
+    customSiteTitle: "E-Filing API Documentation",
     customfavIcon: "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/favicon-32x32.png",
     swaggerOptions: {
         persistAuthorization: true,
