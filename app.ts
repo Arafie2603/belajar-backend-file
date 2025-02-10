@@ -5,6 +5,7 @@ import suratmasukRoute from './src/routes/suratmasukRoute';
 import suratkeluarRoute from './src/routes/suratkeluarRoute';
 import nomorsuratRoute from './src/routes/nomorsuratRoute';
 import notulenRoute from './src/routes/notulenRoute';
+import fakturRoute from './src/routes/fakturRoute';
 import prisma from './prisma';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
@@ -94,6 +95,7 @@ app.use('/api/surat-masuk', suratmasukRoute);
 app.use('/api/surat-keluar', suratkeluarRoute);
 app.use('/api/nomor-surat', nomorsuratRoute);
 app.use('/api/notulen', notulenRoute);
+app.use('/api/faktur', fakturRoute);
 
 process.on('SIGINT', async () => {
     await prisma.$disconnect();

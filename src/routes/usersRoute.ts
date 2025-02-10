@@ -10,9 +10,17 @@ const router = express.Router();
  *   - name: Auth
  *     description: Authentication
  *   - name: Users
- *     description: Operasi pengguna
+ *     description: CRUD Users
+ *   - name: Nomor Surat
+ *     description: CRUD Nomor Surat
  *   - name: Surat Masuk
- *     description: Operasi surat masuk
+ *     description: CRUD Surat Masuk
+ *   - name: Surat Keluar
+ *     description: CRUD Surat Keluar
+ *   - name: Faktur
+ *     description: CRUD Faktur
+ *   - name: Notulen
+ *     description: CRUD Notulen
  */
 /**
  * @swagger

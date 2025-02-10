@@ -54,6 +54,7 @@ model Faktur {
   id String @id @default(uuid())
   bukti_pembayaran String
   createdAt DateTime @default(now())
+  deskripsi String
 }
 model NomorSurat {
   nomor_surat String @id 
