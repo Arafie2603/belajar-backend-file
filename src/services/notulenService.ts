@@ -6,6 +6,7 @@ import { notulenValidation } from '../validation/notulenValidation';
 import { PaginatedResponse } from '../model/suratmasukModel';
 import { responseError } from '../error/responseError';
 import { MINIO_ENDPOINT, MINIO_PORT, minioClient } from '../helper/minioClient';
+import { ZodError } from 'zod';
 
 const prisma = new PrismaClient();
 
@@ -228,6 +229,12 @@ export class NotulenService {
             return toNotulenResponse(notulen);
         } catch (error) {
             console.log('Error deleting notulen ', error);
+            if (error instanceof ZodError) {
+                throw new responseError(400, 'Validation Error: ' + error.errors.map(e => e.message).join(', '));
+            } else if (error instanceof responseError) {
+                throw error;
+            }
+            console.error('Error updating faktur:', error);
             throw new responseError(500, 'Internal server error');
         }
     }

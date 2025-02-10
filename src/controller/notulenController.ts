@@ -102,16 +102,17 @@ export class NotulenController {
             });
         } catch (error) {
             if (error instanceof responseError) {
-                res.status(404).json({
-                    status: 404,
-                    message: error.message
+                res.status(error.status).json({
+                    status: error.status,
+                    message: error.message,
+                });
+            } else {
+                console.error('Error updating faktur:', error);
+                res.status(500).json({
+                    status: 500,
+                    message: "Internal server error"
                 });
             }
-            console.error('Error creating Notulen:', error);
-            res.status(500).json({
-                status: 500,
-                message: 'Internal server error',
-            });
             next(error);
         }
     }
