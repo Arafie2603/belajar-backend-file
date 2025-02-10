@@ -15,8 +15,8 @@ import { Client } from 'minio';
 // });
 
 // Local
-export const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || '127.0.0.1';
-export const MINIO_PORT = parseInt(process.env.MINIO_PORT || '9000');
+export const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || 'localhost';
+export const MINIO_PORT = parseInt(process.env.MINIO_PORT || '9001');
 const MINIO_USE_SSL = false;
 const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY || '';
 const MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY || '';

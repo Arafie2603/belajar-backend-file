@@ -9,9 +9,9 @@ export class suratmasukController {
             const totalData = parseInt(req.query.totalData as string) || 10;
             const tujuan = req.query.tujuan as string | undefined;
             const kategori = req.query.kategori as string | undefined;
-            const isAvailable = req.query.isAvailable as string | undefined;
+            const organisasi = req.query.organisasi as string | undefined;
 
-            const response = await suratmasukService.getAllSuratMasuk(page, totalData, kategori, tujuan);
+            const response = await suratmasukService.getAllSuratMasuk(page, totalData, organisasi, tujuan);
 
             res.status(200).json({
                 data: {

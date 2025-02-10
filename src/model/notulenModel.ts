@@ -18,7 +18,6 @@ export type PaginatedResponse<T> = {
 
 
 
-
 export type CreateNotulenRequest = {
     id: String; 
     judul: String; 
@@ -29,8 +28,6 @@ export type CreateNotulenRequest = {
     agenda: String;
     dokumen_lampiran: String;
     status: String;
-    updated_by: String;
-    created_by: String;
     user_id: String;
 }
 
@@ -43,8 +40,6 @@ export type UpdateNotulenRequest = {
     agenda: String;
     dokumen_lampiran: String;
     status: String;
-    updated_by: String;
-    created_by: String;
 } 
 
 export type NotulenResponse = {

@@ -7,7 +7,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/surat:
+ * /api/surat-masuk:
  *   get:
  *     summary: "Mengambil daftar surat masuk"
  *     tags:
@@ -36,9 +36,9 @@ const router = express.Router();
  *         required: false
  *         schema:
  *           type: string
- *       - name: kategori
+ *       - name: organisasi
  *         in: query
- *         description: "Filter untuk mencari berdasarkan kategori"
+ *         description: "Filter untuk mencari berdasarkan organisasi"
  *         required: false
  *         schema:
  *           type: string
@@ -166,7 +166,7 @@ router.get('/', suratmasukController.getAllSuratmasuk);
 
 /**
  * @swagger
- * /api/surat/{id}:
+ * /api/surat-masuk/{id}:
  *   get:
  *     summary: "Mengambil detail surat masuk berdasarkan ID"
  *     tags:
@@ -293,7 +293,7 @@ router.get('/:no_surat_masuk', suratmasukController.getSuratmasukById);
 
 /**
  * @swagger
- * /api/surat:
+ * /api/surat-masuk:
  *   post:
  *     summary: "Membuat surat masuk baru"
  *     tags:
@@ -460,7 +460,7 @@ router.post('/', upload.single('scan_surat'), authMiddleware ,suratmasukControll
 
 /**
  * @swagger
- * /api/surat/{id}:
+ * /api/surat-masuk/{id}:
  *   patch:
  *     summary: "Memperbarui surat masuk berdasarkan ID"
  *     tags:
@@ -507,8 +507,6 @@ router.post('/', upload.single('scan_surat'), authMiddleware ,suratmasukControll
  *                 format: date
  *               diteruskan_kepada:
  *                 type: string
- *               kategori:
- *                 type: string
  *               tanggal_penyelesaian:
  *                 type: string
  *                 format: date
@@ -525,7 +523,6 @@ router.post('/', upload.single('scan_surat'), authMiddleware ,suratmasukControll
  *               sifat_surat: "penting"
  *               expired_data: "2025-10-02"
  *               diteruskan_kepada: "Bagian Money"
- *               kategori: "Perbaikan"
  *               tanggal_penyelesaian: "2025-07-12"
  *               isi_disposisi: "Tindak lanjut"
  *     responses:
@@ -631,7 +628,7 @@ router.patch('/:no_surat_masuk', upload.single('scan_surat'), authMiddleware, su
 
 /**
  * @swagger
- * /api/surat/{no_surat_masuk}:
+ * /api/surat-masuk/{no_surat_masuk}:
  *   delete:
  *     summary: "Menghapus surat masuk berdasarkan ID"
  *     tags:

@@ -10,16 +10,16 @@ export class suratmasukService {
     static async getAllSuratMasuk(
         page: number = 1,
         totalData: number = 10,
-        kategori?: string,
+        organisasi?: string,
         tujuan?: string,
     ): Promise<PaginatedResponse<SuratmasukResponseWithoutDispoisi>> {
         const skip = (page - 1) * totalData;
         const take = totalData;
         const where: any = {};
 
-        if (kategori) {
-            where.kategori = {
-                contains: kategori,
+        if (organisasi) {
+            where.organisasi = {
+                contains: organisasi,
             };
         }
 
@@ -134,7 +134,6 @@ export class suratmasukService {
                 sifat_surat: validationRequest.sifat_surat,
                 scan_surat: validationRequest.scan_surat,
                 expired_data: validationRequest.expired_data,
-                kategori: request.kategori,
                 diteruskan_kepada: request.diteruskan_kepada,
                 tanggal_penyelesaian: request.tanggal_penyelesaian,
                 isi_disposisi: request.isi_disposisi,

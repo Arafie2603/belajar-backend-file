@@ -87,7 +87,6 @@ model SuratMasuk {
   alamat String @db.VarChar(100)
   perihal String @db.VarChar(100)
   tujuan String 
-  kategori String
   organisasi String
   pengirim String
   penerima String
