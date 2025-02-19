@@ -41,6 +41,7 @@
     "@types/decimal.js": "^0.0.32",
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.8",
+    "@types/mime-types": "^2.1.4",
     "@types/node": "^22.10.10",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-dist": "^3.30.5",

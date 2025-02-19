@@ -11,6 +11,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
 import bodyParser from 'body-parser';
+import fileRoutes from './src/routes/fileRoute';
 
 const app = express();
 app.use(express.json());
@@ -96,6 +97,8 @@ app.use('/api/surat-keluar', suratkeluarRoute);
 app.use('/api/nomor-surat', nomorsuratRoute);
 app.use('/api/notulen', notulenRoute);
 app.use('/api/faktur', fakturRoute);
+app.use('/api/files', fileRoutes);
+
 
 process.on('SIGINT', async () => {
     await prisma.$disconnect();

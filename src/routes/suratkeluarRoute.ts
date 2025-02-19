@@ -51,7 +51,7 @@ const router = express.Router();
  *                     properties:
  *                       id:
  *                         type: string
- *                       tanggal_surat:
+ *                       tanggal:
  *                         type: string
  *                         format: date-time
  *                       tempat_surat:
@@ -138,7 +138,7 @@ router.get('/', authMiddleware, suratkeluarController.getAllSuratkeluar);
  *                   properties:
  *                     id:
  *                       type: string
- *                     tanggal_surat:
+ *                     tanggal:
  *                       type: string
  *                       format: date-time
  *                     tempat_surat:
@@ -170,7 +170,7 @@ router.get('/', authMiddleware, suratkeluarController.getAllSuratkeluar);
  *               status: 200
  *               data: 
  *                 id: "000a60a2-6cf7-42f4-9328-ff1b6a551183"
- *                 tanggal_surat: "2025-01-10T00:00:00.000Z"
+ *                 tanggal: "2025-01-10T00:00:00.000Z"
  *                 tempat_surat: "Jakarta"
  *                 lampiran: "Lampir"
  *                 isi_surat: "Isian"
@@ -218,7 +218,7 @@ router.get('/:id', authMiddleware, suratkeluarController.getSuratmasukById);
  *           schema:
  *             type: object
  *             properties:
- *               tanggal_surat:
+ *               tanggal:
  *                 type: string
  *                 format: date
  *               tempat_surat:
@@ -253,7 +253,7 @@ router.get('/:id', authMiddleware, suratkeluarController.getSuratmasukById);
  *               kategori:
  *                 type: string
  *             example:
- *               tanggal_surat: "2025-02-03"
+ *               tanggal: "2025-02-03"
  *               tempat_surat: "Kantor Utama"
  *               lampiran: "Proposal Kegiatan"
  *               isi_surat: "Surat permohonan kerjasama"
@@ -275,7 +275,7 @@ router.get('/:id', authMiddleware, suratkeluarController.getSuratmasukById);
  *                   properties:
  *                     id:
  *                       type: string
- *                     tanggal_surat:
+ *                     tanggal:
  *                       type: string
  *                       format: date-time
  *                     tempat_surat:
@@ -309,7 +309,7 @@ router.get('/:id', authMiddleware, suratkeluarController.getSuratmasukById);
  *             example:
  *               data: 
  *                 id: "6894062e-e8fd-4243-a571-75906c55987a"
- *                 tanggal_surat: "2025-01-10T00:00:00.000Z"
+ *                 tanggal: "2025-01-10T00:00:00.000Z"
  *                 tempat_surat: "jakarta"
  *                 lampiran: "yaya"
  *                 isi_surat: "isi"
@@ -356,7 +356,7 @@ router.post('/', upload.single('gambar'), authMiddleware, suratkeluarController.
  *           schema:
  *             type: object
  *             properties:
- *               tanggal_surat:
+ *               tanggal:
  *                 type: string
  *                 format: date
  *               tempat_surat:
@@ -386,7 +386,7 @@ router.post('/', upload.single('gambar'), authMiddleware, suratkeluarController.
  *               kategori:
  *                 type: string
  *             example:
- *               tanggal_surat: "2025-02-03"
+ *               tanggal: "2025-02-03"
  *               tempat_surat: "Kantor Utama"
  *               lampiran: "Proposal Kegiatan"
  *               isi_surat: "Surat permohonan kerjasama"
@@ -411,7 +411,7 @@ router.post('/', upload.single('gambar'), authMiddleware, suratkeluarController.
  *                   properties:
  *                     id:
  *                       type: string
- *                     tanggal_surat:
+ *                     tanggal:
  *                       type: string
  *                       format: date-time
  *                     tempat_surat:
@@ -440,7 +440,7 @@ router.post('/', upload.single('gambar'), authMiddleware, suratkeluarController.
  *               message: "Surat Keluar updated successfully"
  *               data: 
  *                 id: "000a60a2-6cf7-42f4-9328-ff1b6a551183"
- *                 tanggal_surat: "2025-01-10T00:00:00.000Z"
+ *                 tanggal: "2025-01-10T00:00:00.000Z"
  *                 tempat_surat: "Jakarta"
  *                 lampiran: "Lampir"
  *                 isi_surat: "Isian"

@@ -60,7 +60,7 @@ const router = express.Router();
  *                             type: string
  *                           judul:
  *                             type: string
- *                           tanggal_rapat:
+ *                           tanggal:
  *                             type: string
  *                             format: date-time
  *                           lokasi:
@@ -173,7 +173,7 @@ router.get('/', authMiddleware, NotulenController.getAllNotulen);
  *                       type: string
  *                     judul:
  *                       type: string
- *                     tanggal_rapat:
+ *                     tanggal:
  *                       type: string
  *                       format: date-time
  *                     lokasi:
@@ -199,7 +199,7 @@ router.get('/', authMiddleware, NotulenController.getAllNotulen);
  *                 data:
  *                   id: "5dee1171-8a9a-4b75-a709-bf0db71bff45"
  *                   judul: "Rapat Bulanan"
- *                   tanggal_rapat: "2025-01-10T00:00:00.000Z"
+ *                   tanggal: "2025-01-10T00:00:00.000Z"
  *                   lokasi: "Lampir"
  *                   pemimpin_rapat: "Isian"
  *                   peserta: "Ara"
@@ -245,7 +245,7 @@ router.get('/:id', authMiddleware, NotulenController.getNotulenById);
  *             properties:
  *               judul:
  *                 type: string
- *               tanggal_rapat:
+ *               tanggal:
  *                 type: string
  *                 format: date
  *                 example: "2025-01-10"  # Nilai default untuk tanggal
@@ -284,7 +284,7 @@ router.get('/:id', authMiddleware, NotulenController.getNotulenById);
  *                       type: string
  *                     judul:
  *                       type: string
- *                     tanggal_rapat:
+ *                     tanggal:
  *                       type: string
  *                       format: date-time
  *                     lokasi:
@@ -313,7 +313,7 @@ router.get('/:id', authMiddleware, NotulenController.getNotulenById);
  *                 data:
  *                   id: "5dee1171-8a9a-4b75-a709-bf0db71bff45"
  *                   judul: "Rapat Bulanan"
- *                   tanggal_rapat: "2025-01-10T00:00:00.000Z"
+ *                   tanggal: "2025-01-10T00:00:00.000Z"
  *                   lokasi: "Lampir"
  *                   pemimpin_rapat: "Isian"
  *                   peserta: "Ara"
@@ -366,7 +366,7 @@ router.post('/', upload.single('dokumen_lampiran'), authMiddleware, NotulenContr
  *             properties:
  *               judul:
  *                 type: string
- *               tanggal_rapat:
+ *               tanggal:
  *                 type: string
  *                 format: date
  *                 example: "2025-01-10"  # Nilai default untuk tanggal
@@ -405,7 +405,7 @@ router.post('/', upload.single('dokumen_lampiran'), authMiddleware, NotulenContr
  *                       type: string
  *                     judul:
  *                       type: string
- *                     tanggal_rapat:
+ *                     tanggal:
  *                       type: string
  *                       format: date-time
  *                     lokasi:
@@ -431,7 +431,7 @@ router.post('/', upload.single('dokumen_lampiran'), authMiddleware, NotulenContr
  *                 data:
  *                   id: "5dee1171-8a9a-4b75-a709-bf0db71bff45"
  *                   judul: "Rapat Bulanan"
- *                   tanggal_rapat: "2025-01-10T00:00:00.000Z"
+ *                   tanggal: "2025-01-10T00:00:00.000Z"
  *                   lokasi: "Lampir"
  *                   pemimpin_rapat: "Isian"
  *                   peserta: "Ara"

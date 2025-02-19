@@ -171,4 +171,49 @@ export class userService {
             }
         });
     }
+
+    static async logout(token: string): Promise<void> {
+        try {
+            if (!token) {
+                throw new responseError(400, "Token is required");
+            }
+
+            // Cek apakah token sudah ada di blacklist
+            const existingToken = await prismaClient.tokenBlacklist.findUnique({
+                where: { token }
+            });
+
+            if (existingToken) {
+                // Token sudah di-blacklist, anggap logout berhasil
+                return;
+            }
+
+            // Tambahkan token ke blacklist
+            await prismaClient.tokenBlacklist.create({
+                data: {
+                    token
+                }
+            });
+        } catch (error) {
+            console.error('Error during logout service:', error);
+            if (error instanceof responseError) {
+                throw error;
+            }
+            throw new responseError(500, "Failed to logout");
+        }
+    }
+
+    static async isTokenBlacklisted(token: string): Promise<boolean> {
+        try {
+            const blacklistedToken = await prismaClient.tokenBlacklist.findUnique({
+                where: { token }
+            });
+            return !!blacklistedToken;
+        } catch (error) {
+            console.error('Error checking token blacklist:', error);
+            throw new responseError(500, "Failed to check token status");
+        }
+    }
+
+    
 }

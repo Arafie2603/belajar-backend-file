@@ -660,4 +660,62 @@ router.patch('/:nomor_identitas', authMiddleware, usersController.updateUser);
 
 router.delete('/:nomor_identitas', authMiddleware, usersController.deleteUser);
 
+
+
+/**
+ * @swagger
+ * /api/users/logout:
+ *   post:
+ *     summary: "Logout dari aplikasi"
+ *     tags:
+ *       - Users
+ *     description: "Endpoint ini untuk logout dari aplikasi"
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Logout successful"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Logout successful"
+ *       400:
+ *         description: "Token is required"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Token is required"
+ *       500:
+ *         description: "Internal server error"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+router.post('/logout', authMiddleware, usersController.logout);
+
+
+
+
 export default router;

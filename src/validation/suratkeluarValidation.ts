@@ -2,7 +2,7 @@ import { z, ZodType } from 'zod';
 
 export class suratkeluarValidation {
     static readonly SuratkeluarValidation: ZodType = z.object({
-        tanggal_surat: z.string()
+        tanggal: z.string()
             .refine((date) => !isNaN(Date.parse(date)), {
                 message: "Invalid date format"
             }),
@@ -20,7 +20,7 @@ export class suratkeluarValidation {
     });
 
     static readonly UpdateSuratkeluarValidation: ZodType = z.object({
-        tanggal_surat: z.date().optional(),
+        tanggal: z.date().optional(),
         tempat_surat: z.string()
             .max(100, "Tempat surat tidak boleh lebih dari 100 karakter")
             .optional(),

@@ -9,8 +9,21 @@ import { MINIO_ENDPOINT, MINIO_PORT, minioClient } from '../helper/minioClient';
 import { ZodError } from 'zod';
 
 const prisma = new PrismaClient();
+const BUCKET_NAME = "notulen";
 
 export class NotulenService {
+    private static async deleteFileFromMinio(fileUrl: string): Promise<void> {
+        try {
+            const url = new URL(fileUrl);
+            const filePath = url.pathname.split('/').pop();
+            if (filePath) {
+                await minioClient.removeObject(BUCKET_NAME, filePath);
+            }
+        } catch (error) {
+            console.error("Error deleting file from MinIO:", error);
+            throw new responseError(500, "Failed to delete file from storage");
+        }
+    }
     static async getAllNotulen(
         page: number = 1,
         totalData: number = 10,
@@ -39,7 +52,7 @@ export class NotulenService {
                 take,
                 where,
                 orderBy: {
-                    tanggal_rapat: 'desc',
+                    tanggal: 'desc',
                 }
             }),
             prisma.notulen.count({ where }),
@@ -69,66 +82,70 @@ export class NotulenService {
     ): Promise<NotulenResponse> {
         try {
             const findNameUser = await prisma.user.findUnique({
-                where: {
-                    id: userId,
-                }
+                where: { id: userId }
             });
 
             if (!file) {
                 throw new responseError(400, 'File is required');
             }
 
-            const filename = `${Date.now()}-${file.originalname}`; // Tambahkan timestamp untuk menghindari nama file duplikat
-            const bucketName = "notulen";
+            const filename = `${Date.now()}-${file.originalname}`;
+            let fileUrl = '';
 
             try {
-                // Pastikan bucket MinIO ada sebelum menyimpan file
-                const bucketExists = await minioClient.bucketExists(bucketName);
+                // Ensure MinIO bucket exists
+                const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
                 if (!bucketExists) {
-                    await minioClient.makeBucket(bucketName, "us-east-1");
+                    await minioClient.makeBucket(BUCKET_NAME, "us-east-1");
                 }
 
-                await minioClient.putObject(bucketName, filename, file.buffer);
-                const fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${bucketName}/${filename}`;
+                // Upload file to MinIO
+                await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+                fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
 
                 const validateRequest = {
                     ...request,
                     dokumen_lampiran: fileUrl,
                 };
 
-                // Validasi request
+                // Validate request
                 const validated = Validation.validate(
                     notulenValidation.NotulenValidation,
                     validateRequest
                 );
 
-                // Konversi tanggal_rapat
-                const tanggal_rapat = new Date(validated.tanggal_rapat);
-                if (isNaN(tanggal_rapat.getTime())) {
+                const tanggal = new Date(validated.tanggal);
+                if (isNaN(tanggal.getTime())) {
                     throw new responseError(400, 'Invalid date format');
                 }
 
-                const notulen = await prisma.notulen.create({
-                    data: {
-                        id: uuidv4(),
-                        judul: validated.judul,
-                        tanggal_rapat: tanggal_rapat,
-                        lokasi: validated.lokasi,
-                        pemimpin_rapat: validated.pemimpin_rapat,
-                        peserta: validated.peserta,
-                        agenda: validated.agenda,
-                        dokumen_lampiran: fileUrl,
-                        status: validated.status,
-                        updated_by: findNameUser?.nama || "",
-                        created_by: findNameUser?.nama || "",
-                        user_id: userId,
-                    }
+                // Use transaction to ensure database and file operations are atomic
+                const notulen = await prisma.$transaction(async (tx) => {
+                    const result = await tx.notulen.create({
+                        data: {
+                            id: uuidv4(),
+                            judul: validated.judul,
+                            tanggal: tanggal,
+                            lokasi: validated.lokasi,
+                            pemimpin_rapat: validated.pemimpin_rapat,
+                            peserta: validated.peserta,
+                            agenda: validated.agenda,
+                            dokumen_lampiran: fileUrl,
+                            status: validated.status,
+                            updated_by: findNameUser?.nama || "",
+                            created_by: findNameUser?.nama || "",
+                            user_id: userId,
+                        }
+                    });
+                    return result;
                 });
 
                 return toNotulenResponse(notulen);
-            } catch (minioError) {
-                console.error('MinIO error:', minioError);
-                throw new responseError(500, 'Failed to upload file');
+            } catch (error) {
+                if (fileUrl) {
+                    await this.deleteFileFromMinio(fileUrl);
+                }
+                throw error;
             }
         } catch (error) {
             console.error('Error creating notulen:', error);
@@ -153,42 +170,55 @@ export class NotulenService {
 
             const validateRequest = Validation.validate(notulenValidation.UpdateNotulenValidation, request);
 
-            // Konversi tanggal_rapat menjadi format Date
-            const rawTanggal = validateRequest.tanggal_rapat;
+            const rawTanggal = validateRequest.tanggal;
             const timestamp = Date.parse(rawTanggal);
             if (isNaN(timestamp)) {
                 throw new responseError(400, 'Kesalahan format input data tanggal, format yang benar YY-MM-DD');
             }
 
-            const tanggal_rapat = new Date(timestamp);
-
+            const tanggal = new Date(timestamp);
             let fileUrl = findNotulen.dokumen_lampiran;
+
             if (file) {
-                const filename = `${file.originalname}`;
-                const bucketName = "notulen";
-                fileUrl = `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${bucketName}/${filename}`;
-                const bucketExists = await minioClient.bucketExists(bucketName);
-                if (!bucketExists) {
-                    await minioClient.makeBucket(bucketName, "us-east-1");
+                try {
+                    // Delete existing file if it exists
+                    if (findNotulen.dokumen_lampiran) {
+                        await this.deleteFileFromMinio(findNotulen.dokumen_lampiran);
+                    }
+
+                    const filename = `${Date.now()}-${file.originalname}`;
+                    const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
+                    if (!bucketExists) {
+                        await minioClient.makeBucket(BUCKET_NAME, "us-east-1");
+                    }
+
+                    await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+                    fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
+                } catch (error) {
+                    console.error('Error updating file in MinIO:', error);
+                    throw new responseError(500, 'Failed to update file in storage');
                 }
-                await minioClient.putObject(bucketName, filename, file.buffer);
             }
 
-            const updatedNotulen = await prisma.notulen.update({
-                where: { id },
-                data: {
-                    judul: validateRequest.judul,
-                    tanggal_rapat: tanggal_rapat,
-                    lokasi: validateRequest.lokasi,
-                    pemimpin_rapat: validateRequest.pemimpin_rapat,
-                    peserta: validateRequest.peserta,
-                    agenda: validateRequest.agenda,
-                    dokumen_lampiran: fileUrl,
-                    status: validateRequest.status,
-                    updated_by: validateRequest.updated_by,
-                    created_by: validateRequest.created_by,
-                    user_id: validateRequest.user_id,
-                }
+            // Use transaction to ensure database and file operations are atomic
+            const updatedNotulen = await prisma.$transaction(async (tx) => {
+                const result = await tx.notulen.update({
+                    where: { id },
+                    data: {
+                        judul: validateRequest.judul,
+                        tanggal: tanggal,
+                        lokasi: validateRequest.lokasi,
+                        pemimpin_rapat: validateRequest.pemimpin_rapat,
+                        peserta: validateRequest.peserta,
+                        agenda: validateRequest.agenda,
+                        dokumen_lampiran: fileUrl,
+                        status: validateRequest.status,
+                        updated_by: validateRequest.updated_by,
+                        created_by: validateRequest.created_by,
+                        user_id: validateRequest.user_id,
+                    }
+                });
+                return result;
             });
 
             return toNotulenResponse(updatedNotulen);
@@ -203,15 +233,23 @@ export class NotulenService {
 
     static async deleteNotulen(id: string): Promise<void> {
         try {
-            const findNtoulen = await prisma.notulen.findUnique({ where: { id } });
-            if (!findNtoulen) {
+            const findNotulen = await prisma.notulen.findUnique({ where: { id } });
+            if (!findNotulen) {
                 throw new responseError(404, `Notulen with ID ${id} not found`);
             }
-            await prisma.notulen.delete({
-                where: { id }
+
+            // Use transaction to ensure both database and file deletion are atomic
+            await prisma.$transaction(async (tx) => {
+                // Delete database record first
+                await tx.notulen.delete({ where: { id } });
+
+                // If database deletion successful, delete file from MinIO
+                if (findNotulen.dokumen_lampiran) {
+                    await this.deleteFileFromMinio(findNotulen.dokumen_lampiran);
+                }
             });
         } catch (error) {
-            console.log('Error deleting notulen ', error);
+            console.error('Error deleting notulen:', error);
             throw new responseError(500, 'Internal server error');
         }
     }

@@ -164,4 +164,40 @@ export class usersController {
             }
         }
     }
+
+
+    static async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
+                res.status(401).json({
+                    status: 401,
+                    message: 'No token provided'
+                });
+                return;
+            }
+
+            const token = authHeader.split(' ')[1];
+            await userService.logout(token);
+
+            res.status(200).json({
+                status: 200,
+                message: 'Logout successful'
+            });
+        } catch (error) {
+            console.error('Error during logout:', error);
+            if (error instanceof Error) {
+                res.status(500).json({
+                    status: 500,
+                    message: error.message || 'Internal server error'
+                });
+            } else {
+                res.status(500).json({
+                    status: 500,
+                    message: 'Internal server error'
+                });
+            }
+        }
+    }
+
 }

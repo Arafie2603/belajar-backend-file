@@ -7,31 +7,41 @@ import { MINIO_ENDPOINT, MINIO_PORT, minioClient } from '../helper/minioClient';
 import { error } from 'console';
 
 const prismaClient = new PrismaClient();
+const BUCKET_NAME = "faktur";
 
 export class FakturService {
+    private static async deleteFileFromMinio(fileUrl: string): Promise<void> {
+        try {
+            const url = new URL(fileUrl);
+            const filePath = url.pathname.split('/').pop();
+            if (filePath) {
+                await minioClient.removeObject(BUCKET_NAME, filePath);
+            }
+        } catch (error) {
+            console.error("Error deleting file from MinIO:", error);
+            throw new responseError(500, "Failed to delete file from storage");
+        }
+    }
     static async createFaktur(
         request: CreateFakturRequest,
         userId: string,
         file: Express.Multer.File,
-
     ): Promise<FakturResponse> {
         try {
             const filename = `${Date.now()}-${file.originalname}`;
-            const bucketName = "faktur";
 
-            const bucketExists = await minioClient.bucketExists(bucketName);
+            const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
             if (!bucketExists) {
-                await minioClient.makeBucket(bucketName, "us-east-1");
+                await minioClient.makeBucket(BUCKET_NAME, "us-east-1");
             }
 
-            await minioClient.putObject(bucketName, filename, file.buffer);
-            const fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${bucketName}/${filename}`;
+            await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+            const fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
 
             const validateRequest = {
                 ...request,
                 bukti_pembayaran: fileUrl,
             };
-
 
             const faktur = await prismaClient.faktur.create({
                 data: validateRequest
@@ -77,19 +87,24 @@ export class FakturService {
                 throw new responseError(404, `Faktur with ID ${id} not found`);
             }
 
-            const filename = `${Date.now()}-${file?.originalname}`;
-            const bucketName = "faktur";
-
-            const bucketExists = await minioClient.bucketExists(bucketName);
-            if (!bucketExists) {
-                await minioClient.makeBucket(bucketName, "us-east-1");
-            }
+            let fileUrl = findFaktur.bukti_pembayaran;
 
             if (file) {
-                await minioClient.putObject(bucketName, filename, file.buffer);
-            }
+                // Delete old file first
+                if (findFaktur.bukti_pembayaran) {
+                    await this.deleteFileFromMinio(findFaktur.bukti_pembayaran);
+                }
 
-            const fileUrl = `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${bucketName}/${filename}`;
+                // Upload new file
+                const filename = `${Date.now()}-${file.originalname}`;
+                const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
+                if (!bucketExists) {
+                    await minioClient.makeBucket(BUCKET_NAME, "us-east-1");
+                }
+
+                await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+                fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
+            }
 
             const validateRequest = {
                 ...request,
@@ -118,6 +133,13 @@ export class FakturService {
             if (!faktur) {
                 throw new responseError(404, `Faktur with ID ${id} not found`);
             }
+
+            // Delete file from MinIO first
+            if (faktur.bukti_pembayaran) {
+                await this.deleteFileFromMinio(faktur.bukti_pembayaran);
+            }
+
+            // Then delete the record from database
             await prismaClient.faktur.delete({ where: { id } });
         } catch (error) {
             if (error instanceof ZodError) {
@@ -125,7 +147,7 @@ export class FakturService {
             } else if (error instanceof responseError) {
                 throw error;
             }
-            console.error('Error updating faktur:', error);
+            console.error('Error deleting faktur:', error);
             throw new responseError(500, 'Internal server error');
         }
     }

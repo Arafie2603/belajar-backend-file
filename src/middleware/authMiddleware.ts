@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { userService } from '../services/userService';
 
 // Extend Request type to include user information
 declare global {
@@ -27,7 +28,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const TOKEN_EXPIRY = '24h'; // Konstanta untuk masa berlaku token
+const TOKEN_EXPIRY = '24h';
 
 export const createToken = (user: any) => {
     return jwt.sign(
@@ -43,7 +44,7 @@ export const createToken = (user: any) => {
     );
 };
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader) {
@@ -55,14 +56,31 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
-        
-        req.user = {
-            id: decoded.id,
-            role: decoded.role
-        };
-        
-        next();
+
+        // Periksa apakah token telah di-blacklist
+        userService.isTokenBlacklisted(token).then((isBlacklisted) => {
+            if (isBlacklisted) {
+                res.status(401).json({
+                    status: 401,
+                    message: 'Invalid token'
+                });
+                return;
+            }
+
+            const decoded = jwt.verify(token, JWT_SECRET) as any;
+            
+            req.user = {
+                id: decoded.id,
+                role: decoded.role
+            };
+            
+            next();
+        }).catch((error) => {
+            res.status(500).json({
+                status: 500,
+                message: 'Internal server error'
+            });
+        });
     } catch (error) {
         res.status(401).json({
             status: 401,

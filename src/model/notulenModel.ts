@@ -61,7 +61,7 @@ export function toNotulenResponse(notulen: Notulen): NotulenResponse {
     return {
         id: notulen.id,
         judul: notulen.judul,
-        tanggal_rapat: notulen.tanggal_rapat,
+        tanggal_rapat: notulen.tanggal,
         lokasi: notulen.lokasi,
         pemimpin_rapat: notulen.pemimpin_rapat,
         peserta: notulen.peserta,

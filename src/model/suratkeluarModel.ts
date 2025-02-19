@@ -17,7 +17,7 @@ export type PaginatedResponse<T> = {
 
 export type CreateSuratkeluarRequest = {
     id: string;
-    tanggal_surat: string;
+    tanggal: string;
     tempat_surat: string;
     lampiran: string;
     isi_surat: string;
@@ -32,7 +32,7 @@ export type CreateSuratkeluarRequest = {
 };
 
 export type UpdateSuratkeluarRequest = {
-    tanggal_surat?: Date;
+    tanggal?: Date;
     tempat_surat?: string;
     lampiran?: string;
     isi_surat?: string;
@@ -46,7 +46,7 @@ export type UpdateSuratkeluarRequest = {
 
 export type SuratkeluarResponse = {
     id: string;
-    tanggal_surat: Date;
+    tanggal: Date;
     tempat_surat: string;
     lampiran: string;
     isi_surat: string;
@@ -63,7 +63,7 @@ export type SuratkeluarResponse = {
 export function toSuratkeluarReponse(suratKeluar: SuratKeluar): SuratkeluarResponse {
     return {
         id: suratKeluar.id,
-        tanggal_surat: suratKeluar.tanggal_surat,
+        tanggal: suratKeluar.tanggal,
         tempat_surat: suratKeluar.tempat_surat,
         lampiran: suratKeluar.lampiran,
         isi_surat: suratKeluar.isi_surat,

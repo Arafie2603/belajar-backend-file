@@ -6,6 +6,8 @@ import { suratmasukValidation } from "../validation/suratmasukValidation";
 import { Validation } from "../validation/validation";
 import { v4 as uuidv4 } from 'uuid';
 
+const BUCKET_NAME = 'suratmasuk';
+
 export class suratmasukService {
     static async getAllSuratMasuk(
         page: number = 1,
@@ -79,12 +81,9 @@ export class suratmasukService {
             where: { id: userId }
         });
 
-        console.log("Original request : ", request);
-
         if (!user) {
             throw new Error(`User with ID ${userId} not found`);
         }
-
 
         const modifiedRequest = {
             ...request,
@@ -97,57 +96,63 @@ export class suratmasukService {
                 : new Date(JSON.stringify(request.expired_data)).toISOString()
         }
 
-        console.log('modified request : ', modifiedRequest);
-
+        let fileUrl = '';
         const filename = `${Date.now()}-${file.originalname}`;
-        const bucketName = 'suratmasuk';
-        const fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${bucketName}/${filename}`;
 
-        const requestWithFile = {
-            ...modifiedRequest,
-            scan_surat: fileUrl,
-            user_id: userId
-        };
-        const validationRequest = Validation.validate(
-            suratmasukValidation.SuratmasukValidation,
-            requestWithFile
-        );
+        try {
+            const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
+            if (!bucketExists) {
+                await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
+            }
 
-        const bucketExists = await minioClient.bucketExists(bucketName);
-        if (!bucketExists) {
-            await minioClient.makeBucket(bucketName, 'us-east-1');
-        }
+            await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+            fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
 
-        await minioClient.putObject(bucketName, filename, file.buffer);
+            const requestWithFile = {
+                ...modifiedRequest,
+                scan_surat: fileUrl,
+                user_id: userId
+            };
 
+            const validationRequest = Validation.validate(
+                suratmasukValidation.SuratmasukValidation,
+                requestWithFile
+            );
 
-        const suratmasuk = await prismaClient.suratMasuk.create({
-            data: {
-                no_surat_masuk: uuidv4(),
-                tanggal: validationRequest.tanggal,
-                alamat: validationRequest.alamat,
-                perihal: validationRequest.perihal,
-                tujuan: validationRequest.tujuan,
-                organisasi: validationRequest.organisasi,
-                pengirim: validationRequest.pengirim,
-                penerima: validationRequest.penerima,
-                sifat_surat: validationRequest.sifat_surat,
-                scan_surat: validationRequest.scan_surat,
-                expired_data: validationRequest.expired_data,
-                diteruskan_kepada: request.diteruskan_kepada,
-                tanggal_penyelesaian: request.tanggal_penyelesaian,
-                isi_disposisi: request.isi_disposisi,
-
-                user: {
-                    connect: {
-                        id: userId
-                    }
+            const suratmasuk = await prismaClient.suratMasuk.create({
+                data: {
+                    no_surat_masuk: uuidv4(),
+                    tanggal: validationRequest.tanggal,
+                    alamat: validationRequest.alamat,
+                    perihal: validationRequest.perihal,
+                    tujuan: validationRequest.tujuan,
+                    organisasi: validationRequest.organisasi,
+                    pengirim: validationRequest.pengirim,
+                    penerima: validationRequest.penerima,
+                    sifat_surat: validationRequest.sifat_surat,
+                    scan_surat: validationRequest.scan_surat,
+                    expired_data: validationRequest.expired_data,
+                    diteruskan_kepada: request.diteruskan_kepada,
+                    tanggal_penyelesaian: request.tanggal_penyelesaian,
+                    isi_disposisi: request.isi_disposisi,
+                    user: {
+                        connect: {
+                            id: userId
+                        }
+                    },
                 },
-            },
-        });
+            });
 
-        return suratmasuk;
+            return suratmasuk;
+        } catch (error) {
+            // If anything fails, delete the uploaded file if it exists
+            if (fileUrl) {
+                await this.deleteFileFromMinio(fileUrl);
+            }
+            throw error;
+        }
     }
+
 
     static async updateSuratmasuk(
         nomor_surat_masuk: string,
@@ -164,15 +169,14 @@ export class suratmasukService {
                 throw new Error(`User with ID ${userId} not found`);
             }
 
-            const suratmasuk = await prismaClient.suratMasuk.findUnique({
+            const existingSuratMasuk = await prismaClient.suratMasuk.findUnique({
                 where: { no_surat_masuk: nomor_surat_masuk }
             });
 
-            if (!suratmasuk) {
+            if (!existingSuratMasuk) {
                 throw new Error(`Surat masuk with ID ${nomor_surat_masuk} not found`);
             }
 
-            // Modifikasi penanganan tanggal
             const modifiedRequest = {
                 ...request,
                 user_id: userId,
@@ -180,36 +184,61 @@ export class suratmasukService {
                 expired_data: request.expired_data ? new Date(request.expired_data) : undefined
             };
 
-            let fileUrl = suratmasuk?.scan_surat;
+            let fileUrl = existingSuratMasuk.scan_surat;
 
             if (file) {
-                const filename = `${Date.now()}-${file.originalname}`;
-                const bucketName = 'suratmasuk';
-                fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${bucketName}/${filename}`;
+                try {
+                    // Delete existing file first
+                    if (existingSuratMasuk.scan_surat) {
+                        await this.deleteFileFromMinio(existingSuratMasuk.scan_surat);
+                    }
 
-                const bucketExists = await minioClient.bucketExists(bucketName);
-                if (!bucketExists) {
-                    await minioClient.makeBucket(bucketName, 'us-east-1');
+                    const filename = `${Date.now()}-${file.originalname}`;
+                    const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
+                    if (!bucketExists) {
+                        await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
+                    }
+
+                    await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+                    fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
+                } catch (error) {
+                    console.error("Error updating file in MinIO:", error);
+                    throw new Error("Failed to update file in storage");
                 }
-                await minioClient.putObject(bucketName, filename, file.buffer);
             }
 
-            console.log("Modified Request:", modifiedRequest); // Tambahkan log
             const { user_id, ...updateData } = modifiedRequest;
 
-            const updateSuratmasuk = await prismaClient.suratMasuk.update({
-                where: { no_surat_masuk: nomor_surat_masuk },
-                data: {
-                    ...updateData,
-                    scan_surat: fileUrl,
-                    user: { connect: { id: userId } }
-                },
+            // Use transaction to ensure database update and file operations are atomic
+            const result = await prismaClient.$transaction(async (tx) => {
+                const updatedSuratMasuk = await tx.suratMasuk.update({
+                    where: { no_surat_masuk: nomor_surat_masuk },
+                    data: {
+                        ...updateData,
+                        scan_surat: fileUrl,
+                        user: { connect: { id: userId } }
+                    },
+                });
+                return updatedSuratMasuk;
             });
 
-            return updateSuratmasuk;
+            return result;
         } catch (error) {
-            console.error("Service Error:", error); // Tambahkan log error
+            console.error("Service Error:", error);
             throw error;
+        }
+    }
+
+    private static async deleteFileFromMinio(fileUrl: string): Promise<void> {
+        try {
+            const url = new URL(fileUrl);
+            const filePath = url.pathname.split('/').pop();
+            if (filePath) {
+                await minioClient.removeObject(BUCKET_NAME, filePath);
+            }
+        } catch (error) {
+            console.error("Error deleting file from MinIO:", error);
+            throw new Error("Failed to delete file from storage");
         }
     }
 
@@ -224,8 +253,21 @@ export class suratmasukService {
             throw new Error(`Surat masuk with ID ${no_surat_masuk} not found`);
         }
 
-        await prismaClient.suratMasuk.delete({
-            where: { no_surat_masuk: no_surat_masuk },
-        });
+        try {
+            await prismaClient.$transaction(async (tx) => {
+                // Delete the database record first
+                await tx.suratMasuk.delete({
+                    where: { no_surat_masuk: no_surat_masuk },
+                });
+
+                // If database deletion is successful, delete the file from MinIO
+                if (suratmasuk.scan_surat) {
+                    await this.deleteFileFromMinio(suratmasuk.scan_surat);
+                }
+            });
+        } catch (error) {
+            console.error("Error deleting surat masuk:", error);
+            throw new Error("Failed to delete surat masuk");
+        }
     }
 }
