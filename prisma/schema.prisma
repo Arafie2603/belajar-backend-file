@@ -77,7 +77,7 @@ model SuratKeluar {
   tanggal DateTime
   tempat_surat String @db.VarChar(100)
   lampiran String @db.VarChar(100)
-  isi_surat String @db.VarChar(100)
+  isi_surat String @db.Text
   penerima String @db.VarChar(100)
   pengirim String @db.VarChar(100)
   jabatan_pengirim String @db.VarChar(100)
