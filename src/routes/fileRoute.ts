@@ -46,25 +46,35 @@ router.get('/download/:fileName', FileController.downloadFile);
  * @swagger
  * /api/files/view/{fileName}:
  *   get:
- *     summary: "Melihat file gambar berdasarkan nama file"
+ *     summary: "Melihat file (PDF/Gambar) berdasarkan nama file"
  *     tags:
  *       - Files
- *     description: "Endpoint ini untuk melihat file gambar berdasarkan nama file"
+ *     description: "Endpoint ini untuk melihat file PDF atau gambar berdasarkan nama file. Untuk preview file, gunakan URL yang dikembalikan dalam response."
  *     parameters:
  *       - in: path
  *         name: fileName
  *         required: true
  *         schema:
  *           type: string
+ *           default: "1739977887473-surat-keluar.pdf"
  *         description: "Nama file yang akan dilihat"
  *     responses:
  *       200:
- *         description: "File gambar berhasil dilihat"
+ *         description: "URL untuk melihat file"
  *         content:
- *           image/png:
+ *           application/json:
  *             schema:
- *               type: string
- *               format: binary
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "Gunakan URL berikut untuk melihat file"
+ *                 viewUrl:
+ *                   type: string
+ *                   example: "https://your-minio-server/bucket/file.pdf?..."
  *       404:
  *         description: "File tidak ditemukan atau tidak dapat diakses"
  *         content:
@@ -81,6 +91,6 @@ router.get('/download/:fileName', FileController.downloadFile);
  */
 router.get('/view/:fileName', FileController.viewFile);
 
-// router.get('/url/:fileName', FileController.getPresignedUrl);
+router.get('/url/:fileName', FileController.getPresignedUrl);
 
 export default router;
