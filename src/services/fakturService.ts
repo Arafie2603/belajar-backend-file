@@ -43,7 +43,7 @@ export class FakturService {
             const faktur = await prismaClient.faktur.create({
                 data: {
                     ...validatedRequest,
-                    bukti_pembayaran: fileUrl,
+                    bukti_pembayaran: fileUrl || "",
                     userId
                 }
             });

@@ -66,19 +66,10 @@ export class suratkeluarController {
 
             console.log('Authenticate user: ', req.user);
 
-            if (!req.file) {
-                res.status(400).json({
-                    status: 400,
-                    message: 'File is required',
-                    errors: 'No file uploaded',
-                });
-                return;
-            }
-
             const suratkeluar = await SuratKeluarService.createSuratkeluar(
                 req.body,
-                req.file,
                 req.user.id,
+                req.file,
             );
 
             res.status(201).json({

@@ -13,7 +13,7 @@ export class suratkeluarValidation {
         pengirim: z.string().nonempty("Pengirim harus diisi"),
         jabatan_pengirim: z.string().nonempty("Jabatan pengirim harus diisi"),
         gambar: z.string(),
-        keterangan_gambar: z.string(),
+        keterangan_gambar: z.string().optional(),
         sifat_surat: z.string().min(3, "Sifat surat minimal harus 3 huruf").max(100, "Sifat surat tidak boleh lebih dari 100 karakter"),
         keterangan: z.string().min(1, "Keteraangan minimal harus 2 huruf").max(10),
     });

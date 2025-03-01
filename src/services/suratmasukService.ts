@@ -130,7 +130,7 @@ export class suratmasukService {
                     pengirim: validationRequest.pengirim,
                     penerima: validationRequest.penerima,
                     sifat_surat: validationRequest.sifat_surat,
-                    scan_surat: validationRequest.scan_surat,
+                    scan_surat: validationRequest.scan_surat || "",
                     expired_data: validationRequest.expired_data,
                     diteruskan_kepada: request.diteruskan_kepada,
                     tanggal_penyelesaian: request.tanggal_penyelesaian,

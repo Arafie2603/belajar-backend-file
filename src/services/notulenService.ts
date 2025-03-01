@@ -111,7 +111,6 @@ export class NotulenService {
 
             const validatedRequest = parsedRequest.success ? parsedRequest.data : requestToValidate;
 
-            // Process file if it exists
             if (file) {
                 const filename = `${Date.now()}-${file.originalname}`;
 
@@ -127,17 +126,12 @@ export class NotulenService {
                     console.error('Error uploading file:', error);
                     throw new responseError(500, 'Error uploading file');
                 }
-            }
-
-            // Create a modifiedRequest to prevent direct mutation of validatedRequest
+            } 
             const modifiedRequest = { ...validatedRequest };
 
-            // Parse date correctly for Prisma and remove it from the spread object
             let tanggalISO: Date;
             try {
-                // Check if tanggal is a string and convert to Date
                 if (typeof modifiedRequest.tanggal === 'string') {
-                    // Add time component to ensure proper ISO format
                     tanggalISO = new Date(`${modifiedRequest.tanggal}T00:00:00Z`);
                 } else {
                     tanggalISO = new Date(modifiedRequest.tanggal);
@@ -147,22 +141,20 @@ export class NotulenService {
                     throw new Error('Invalid date');
                 }
 
-                // Delete tanggal from modifiedRequest to prevent it from being spread
                 delete modifiedRequest.tanggal;
 
             } catch (error) {
                 throw new responseError(400, 'Invalid date format');
             }
 
-            console.log("ISO Date for Prisma:", tanggalISO.toISOString()); // Debugging
-
+            console.log("ISO Date for Prisma:", tanggalISO.toISOString()); 
             const notulen = await prisma.$transaction(async (tx) => {
                 const result = await tx.notulen.create({
                     data: {
                         id: uuidv4(),
-                        tanggal: tanggalISO, // Using properly parsed date object
-                        ...modifiedRequest, // Spread the object without tanggal
-                        dokumen_lampiran: fileUrl || null, // Set to null if no file uploaded
+                        tanggal: tanggalISO, 
+                        ...modifiedRequest,
+                        dokumen_lampiran: fileUrl || "", 
                         updated_by: findNameUser?.nama || "",
                         created_by: findNameUser?.nama || "",
                         user_id: userId,
@@ -218,7 +210,6 @@ export class NotulenService {
 
             if (file) {
                 try {
-                    // Delete existing file if it exists
                     if (findNotulen.dokumen_lampiran) {
                         await this.deleteFileFromMinio(findNotulen.dokumen_lampiran);
                     }
@@ -237,7 +228,6 @@ export class NotulenService {
                 }
             }
 
-            // Use transaction to ensure database and file operations are atomic
             const updatedNotulen = await prisma.$transaction(async (tx) => {
                 const result = await tx.notulen.update({
                     where: { id },
@@ -275,12 +265,9 @@ export class NotulenService {
                 throw new responseError(404, `Notulen with ID ${id} not found`);
             }
 
-            // Use transaction to ensure both database and file deletion are atomic
             await prisma.$transaction(async (tx) => {
-                // Delete database record first
                 await tx.notulen.delete({ where: { id } });
 
-                // If database deletion successful, delete file from MinIO
                 if (findNotulen.dokumen_lampiran) {
                     await this.deleteFileFromMinio(findNotulen.dokumen_lampiran);
                 }

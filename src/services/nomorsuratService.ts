@@ -152,12 +152,10 @@ export class nomorService {
             S: "S",
         };
     
-        // Jika keterangan di-update, update juga kategori dan nomor_surat
         if (validateRequest.keterangan) {
             validateRequest.kategori = kategoriMap[validateRequest.keterangan] || "Lainnya";
             const newPrefix = prefixMap[validateRequest.keterangan] || "XX";
             
-            // Update hanya bagian prefix dari nomor_surat, format lainnya tetap
             const nomorSuratParts = existingNomorSurat.nomor_surat.split('/');
             nomorSuratParts[0] = newPrefix;
             validateRequest.nomor_surat = nomorSuratParts.join('/');

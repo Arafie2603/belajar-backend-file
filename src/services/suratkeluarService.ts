@@ -69,12 +69,13 @@ export class SuratKeluarService {
 
     static async createSuratkeluar(
         request: CreateSuratkeluarRequest,
-        file: Express.Multer.File,
-        userId: string
+        userId: string,
+        file?: Express.Multer.File
     ): Promise<SuratkeluarResponse> {
         const user = await prismaClient.user.findUnique({
             where: { id: userId },
         });
+        let fileUrl = ""
 
         if (!user) {
             throw new responseError(404, `User with ID ${userId} not found`);
@@ -89,9 +90,18 @@ export class SuratKeluarService {
                     : new Date(JSON.stringify(request.tanggal)).toISOString(),
         };
 
-        const filename = `${file.originalname}`;
-        const bucketName = "suratkeluar";
-        const fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${bucketName}/${filename}`;
+        if (file) {
+            const filename = `${file?.originalname}`;
+            const bucketName = "suratkeluar";
+            fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${bucketName}/${filename}`;
+    
+            const bucketExists = await minioClient.bucketExists(bucketName);
+            if (!bucketExists) {
+                await minioClient.makeBucket(bucketName, "us-east-1");
+            }
+    
+            await minioClient.putObject(bucketName, filename, file.buffer);
+        } 
 
         const requestWithFile = {
             ...modifiedRequest,
@@ -101,13 +111,11 @@ export class SuratKeluarService {
 
         console.log("LOG NIE ", request);
 
-        // Validasi request
         const validationRequest = Validation.validate(
             suratkeluarValidation.SuratkeluarValidation,
             requestWithFile
         );
 
-        // Definisikan mapping keterangan ke kategori
         const kategoriMap: { [key: string]: string } = {
             H: "Perbaikan",
             SA: "Sertifikat Asisten",
@@ -116,28 +124,18 @@ export class SuratKeluarService {
             S: "SK Asisten",
         };
 
-        // Isi kategori berdasarkan keterangan
         const kategori = kategoriMap[validationRequest.keterangan] || "Lainnya";
 
-        // Pastikan bucket MinIO ada sebelum menyimpan file
-        const bucketExists = await minioClient.bucketExists(bucketName);
-        if (!bucketExists) {
-            await minioClient.makeBucket(bucketName, "us-east-1");
-        }
-
-        await minioClient.putObject(bucketName, filename, file.buffer);
-
         try {
-            // Dapatkan jumlah data saat ini dari NomorSurat
+            
             const countNomorSurat = await prismaClient.nomorSurat.count();
-            const newNomorSuratNumber = (countNomorSurat + 1).toString().padStart(2, '0'); // Tambahkan 0 di depan jika satu digit
+            const newNomorSuratNumber = (countNomorSurat + 1).toString().padStart(2, '0'); 
 
-            // Mendapatkan bulan dan tahun saat ini dalam format yang diinginkan
+            
             const now = new Date();
-            const month = (now.getMonth() + 1).toString().padStart(2, "0"); // Format bulan jadi 2 digit
-            const year = now.getFullYear().toString().slice(-2); // Ambil 2 digit terakhir tahun
+            const month = (now.getMonth() + 1).toString().padStart(2, "0"); 
+            const year = now.getFullYear().toString().slice(-2); 
 
-            // Mapping keterangan ke format prefix nomor surat
             const prefixMap: { [key: string]: string } = {
                 H: "H",
                 SA: "SA",
@@ -148,17 +146,15 @@ export class SuratKeluarService {
 
             const prefix = prefixMap[validationRequest.keterangan] || "XX";
 
-            // Format nomor surat sesuai aturan
             const nomorSuratFormat = `${prefix}/UBL/LAB/${newNomorSuratNumber}/${month}/${year}`;
 
-            // Gunakan transaction untuk memastikan NomorSurat dan SuratKeluar dibuat bersamaan
             const result = await prismaClient.$transaction(async (tx) => {
                 const nomorSurat = await tx.nomorSurat.create({
                     data: {
                         nomor_surat: nomorSuratFormat,
-                        kategori: kategori, // Gunakan kategori yang otomatis diisi
+                        kategori: kategori, 
                         keterangan: validationRequest.keterangan,
-                        deskripsi: validationRequest.deskripsi,
+                        deskripsi: validationRequest.deskripsi || "",
                     },
                 });
 
@@ -172,8 +168,8 @@ export class SuratKeluarService {
                         penerima: validationRequest.penerima,
                         pengirim: validationRequest.pengirim,
                         jabatan_pengirim: validationRequest.jabatan_pengirim,
-                        gambar: validationRequest.gambar,
-                        keterangan_gambar: validationRequest.keterangan_gambar,
+                        gambar: validationRequest.gambar || "",
+                        keterangan_gambar: validationRequest.keterangan_gambar || "",
                         sifat_surat: validationRequest.sifat_surat,
                         user_id: userId,
                         surat_nomor: nomorSuratFormat
