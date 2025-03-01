@@ -5,47 +5,35 @@ import { responseError } from '../error/responseError';
 
 export class FakturController {
     static async createFaktur(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const request: CreateFakturRequest = req.body;
-
         try {
             if (!req.user) {
-                res.status(401).json({
-                    status: 401,
-                    message: 'User not authenticated',
-                });
+                res.status(401).json({ status: 401, message: 'Unauthorized' });
                 return;
             }
-
+    
             if (!req.file) {
-                res.status(400).json({
-                    status: 400,
-                    message: 'File is required',
-                });
+                res.status(400).json({ status: 400, message: 'File is required' });
                 return;
             }
-
-            const faktur = await FakturService.createFaktur(request, req.user.id, req.file);
+    
+            const faktur = await FakturService.createFaktur(req.body, req.user.id, req.file);
             res.status(201).json({
                 status: 201,
                 data: faktur,
                 message: "Faktur created successfully"
             });
+            return;
         } catch (error) {
             if (error instanceof responseError) {
-                res.status(error.status).json({
-                    status: error.status,
-                    message: error.message
-                });
-            } else {
-                console.error('Error creating faktur:', error);
-                res.status(500).json({
-                    status: 500,
-                    message: "Internal server error"
-                });
+                res.status(error.status).json({ status: error.status, message: error.message });
+                return;
             }
-            next(error);
+            
+            console.error('Unexpected Error:', error);
+            res.status(500).json({ status: 500, message: "Internal server error" });
         }
     }
+    
 
     static async getFakturById(req: Request, res: Response, next: NextFunction): Promise<void> {
         const { id } = req.params;
@@ -162,13 +150,18 @@ export class FakturController {
                 message: 'Faktur retrieved successfully',
             });
         } catch (error: any) {
-            if (error instanceof responseError) {
+            if (error.StatusCode === 401) {
                 res.status(error.status).json({
                     status: error.status,
-                    message: error.message,
+                    message: "Unauthorized",
                 });
-            } else {
-                console.error('Error updating faktur:', error);
+            } else if (error.StatusCode === 400) {
+                res.status(error.status).json({
+                    status: error.status,
+                    message: "invalid Request",
+                });
+            }
+            else {
                 res.status(500).json({
                     status: 500,
                     message: "Internal server error"

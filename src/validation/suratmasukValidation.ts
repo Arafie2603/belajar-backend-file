@@ -18,6 +18,6 @@ export class suratmasukValidation {
             .refine((date) => !isNaN(Date.parse(date)), {
                 message: "Invalid date format"
             }),
-        kategori: z.string().min(3, "Kategori minimal diisi ")
+        kategori: z.string().min(3, "Kategori Harus Diisi ")
     });
 }

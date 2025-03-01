@@ -12,6 +12,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
 import bodyParser from 'body-parser';
 import fileRoutes from './src/routes/fileRoute';
+import { errorHandler } from './src/error/errorHandler';
 
 const app = express();
 app.use(express.json());
@@ -98,6 +99,9 @@ app.use('/api/nomor-surat', nomorsuratRoute);
 app.use('/api/notulen', notulenRoute);
 app.use('/api/faktur', fakturRoute);
 app.use('/api/files', fileRoutes);
+
+app.use(errorHandler);
+
 
 
 process.on('SIGINT', async () => {

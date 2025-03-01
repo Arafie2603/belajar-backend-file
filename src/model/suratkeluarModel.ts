@@ -57,7 +57,7 @@ export type SuratkeluarResponse = {
     keterangan_gambar: string;
     sifat_surat: string;
     user_id: string;
-    surat_nomor: string; // Tambahkan ini jika belum ada
+    surat_nomor: string; 
 };
 
 export function toSuratkeluarReponse(suratKeluar: SuratKeluar): SuratkeluarResponse {

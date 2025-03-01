@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { CreateFakturRequest, UpdateNomorSuraRequest, FakturResponse, toFakturResponse, PaginatedResponse } from '../model/fakturModel';
 import { responseError } from '../error/responseError';
 import { fakturValidation } from '../validation/fakturValidation';
-import { ZodError } from 'zod';
+import { z, ZodError } from 'zod';
 import { MINIO_ENDPOINT, MINIO_PORT, minioClient } from '../helper/minioClient';
 import { error } from 'console';
 
@@ -28,6 +28,8 @@ export class FakturService {
         file: Express.Multer.File,
     ): Promise<FakturResponse> {
         try {
+            const validatedRequest = fakturValidation.CreateFakturValidation.parse(request);
+
             const filename = `${Date.now()}-${file.originalname}`;
 
             const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
@@ -38,24 +40,34 @@ export class FakturService {
             await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
             const fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
 
-            const validateRequest = {
-                ...request,
-                bukti_pembayaran: fileUrl,
-            };
-
             const faktur = await prismaClient.faktur.create({
-                data: validateRequest
+                data: {
+                    ...validatedRequest,
+                    bukti_pembayaran: fileUrl,
+                    userId
+                }
             });
 
             return toFakturResponse(faktur);
         } catch (error) {
-            if (error instanceof ZodError) {
-                throw new responseError(400, 'Validation Error: ' + error.errors.map(e => e.message).join(', '));
+            if (error instanceof z.ZodError) {
+                console.error("Validation Error:", error.errors);
+
+                const errorDetails = error.errors.map(e => ({
+                    path: e.path.join("."),
+                    message: e.message
+                }));
+
+                throw new responseError(400, "Invalid request");
             }
-            console.error('Error creating faktur:', error);
-            throw new responseError(500, 'Internal server error');
+
+            console.error("Error creating faktur:", error);
+            throw new responseError(500, "Internal server error");
         }
+
+
     }
+
 
     static async getFakturById(id: string): Promise<FakturResponse> {
         try {

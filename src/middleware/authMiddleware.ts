@@ -32,7 +32,7 @@ const TOKEN_EXPIRY = '24h';
 
 export const createToken = (user: any) => {
     return jwt.sign(
-        { 
+        {
             id: user.id,
             role: {
                 role_id: user.role.role_id,
@@ -44,50 +44,51 @@ export const createToken = (user: any) => {
     );
 };
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader) {
-            res.status(401).json({
-                status: 401,
-                message: 'No token provided'
-            });
+            res.status(401).json({ status: 401, message: 'Unauthorized: No token provided' });
             return;
         }
 
         const token = authHeader.split(' ')[1];
 
-        // Periksa apakah token telah di-blacklist
-        userService.isTokenBlacklisted(token).then((isBlacklisted) => {
+        try {
+            const isBlacklisted = await userService.isTokenBlacklisted(token);
             if (isBlacklisted) {
-                res.status(401).json({
-                    status: 401,
-                    message: 'Invalid token'
-                });
+                res.status(401).json({ status: 401, message: 'Unauthorized: Token is blacklisted' });
                 return;
             }
+        } catch (error) {
+            console.error('Error checking token blacklist:', error);
+            res.status(500).json({ status: 500, message: 'Internal Server Error' });
+            return;
+        }
 
+        try {
             const decoded = jwt.verify(token, JWT_SECRET) as any;
-            
-            req.user = {
-                id: decoded.id,
-                role: decoded.role
-            };
-            
+            req.user = { id: decoded.id, role: decoded.role };
             next();
-        }).catch((error) => {
-            res.status(500).json({
-                status: 500,
-                message: 'Internal server error'
+        } catch (error: any) {
+            console.error('JWT Verification Error:', error);
+            res.status(401).json({
+                status: 401,
+                message:
+                    error.name === 'TokenExpiredError'
+                        ? 'Unauthorized: Token has expired'
+                        : 'Unauthorized: Invalid token'
             });
-        });
+            return;
+        }
     } catch (error) {
-        res.status(401).json({
-            status: 401,
-            message: 'Invalid token'
-        });
+        console.error('Unexpected Error in Auth Middleware:', error);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        return;
     }
 };
+
+
 
 export const refreshJWT = (req: AuthenticatedRequest, res: Response) => {
     const authHeader = req.header('Authorization');
