@@ -64,11 +64,8 @@ export class FakturService {
             console.error("Error creating faktur:", error);
             throw new responseError(500, "Internal server error");
         }
-
-
     }
-
-
+    
     static async getFakturById(id: string): Promise<FakturResponse> {
         try {
             const faktur = await prismaClient.faktur.findUnique({ where: { id } });

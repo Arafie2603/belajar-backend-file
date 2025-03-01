@@ -5,9 +5,6 @@ import { responseError } from '../error/responseError';
 
 export class NotulenController {
     static async createNotulen(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const request: CreateNotulenRequest = req.body;
-        console.log("isi request", request);
-        
         try {
             if (!req.user) {
                 res.status(401).json({
@@ -17,19 +14,14 @@ export class NotulenController {
                 return;
             }
     
-            // Pastikan req.file ada
-            if (!req.file) {
-                res.status(400).json({
-                    status: 400,
-                    message: 'File is required',
-                });
-                return;
-            }
+            console.log("File from request:", req.file); 
+    
+            const requestData = { ...req.body };
     
             const notulen = await NotulenService.createNotulen(
-                request,
+                requestData,
                 req.user.id,
-                req.file  // Gunakan req.file
+                req.file // Pass file if exists
             );
     
             res.status(201).json({
@@ -38,25 +30,24 @@ export class NotulenController {
                 message: "Notulen created successfully",
             });
         } catch (error) {
-            if (error instanceof responseError) {
-                if (res.statusCode === 400) {
-                    res.status(400).json({
-                        status: 400,
-                        message: error.message
-                    });
-                } else if (res.statusCode === 404) {
-                    res.status(404).json({
-                        status: 404,
-                        message: error.message
-                    });
-                }
-            }
             console.error('Error creating Notulen:', error);
+    
+            if (res.headersSent) {
+                return;
+            }
+    
+            if (error instanceof responseError) {
+                res.status(error.status).json({
+                    status: error.status,
+                    message: error.message
+                });
+                return;
+            }
+    
             res.status(500).json({
                 status: 500,
-                message: 'Internal server error',
+                message: 'Internal server error'
             });
-            next(error);
         }
     }
 
@@ -120,7 +111,7 @@ export class NotulenController {
     static async updateNotulen(req: Request, res: Response, next: NextFunction): Promise<void> {
         const { id } = req.params;
         const request: UpdateNotulenRequest = req.body;
-    
+
         try {
             if (!req.user) {
                 res.status(401).json({
@@ -129,7 +120,7 @@ export class NotulenController {
                 });
                 return;
             }
-    
+
             const updatedNotulen = await NotulenService.updateNotulen(req.user.id, id, request, req.file);
             res.status(200).json({
                 message: "Notulen updated successfully",
@@ -151,7 +142,7 @@ export class NotulenController {
             next(error);
         }
     }
-    
+
 
     static async deleteNotulen(req: Request, res: Response, next: NextFunction): Promise<void> {
         const { id } = req.params;

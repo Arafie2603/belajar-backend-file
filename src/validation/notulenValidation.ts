@@ -2,28 +2,26 @@ import { z, ZodType } from "zod";
 
 export class notulenValidation {
     static readonly NotulenValidation: ZodType = z.object({
-        judul: z.string().min(3).max(100),
-        tanggal: z.string().transform((str) => new Date(str)),
-        lokasi: z.string().min(3).max(100),
-        pemimpin_rapat: z.string().min(3).max(100),
-        peserta: z.string().min(3).max(100),
-        agenda: z.string().min(3).max(100),
-        dokumen_lampiran: z.string(),
-        status: z.string().min(3).max(100),
+        judul: z.string().min(1, "Required"),
+        tanggal: z.string().min(1, "Required"),
+        lokasi: z.string().min(1, "Required"),
+        pemimpin_rapat: z.string().min(1, "Required"),
+        peserta: z.string().min(1, "Required"),
+        agenda: z.string().min(1, "Required"),
+        status: z.string().min(1, "Required"),
     });
 
     static readonly UpdateNotulenValidation: ZodType = z.object({
-        judul: z.string(),
-        tanggal: z.string(),
-        lokasi: z.string(),
-        pemimpin_rapat: z.string(),
-        peserta: z.string(),
-        agenda: z.string(),
+        judul: z.string().optional(),
+        tanggal: z.string().optional(),
+        lokasi: z.string().optional(),
+        pemimpin_rapat: z.string().optional(),
+        peserta: z.string().optional(),
+        agenda: z.string().optional(),
         dokumen_lampiran: z.string().optional(),
-        status: z.string(),
-        updated_by: z.string(),
-        created_by: z.string(),
+        status: z.string().optional(),
+        updated_by: z.string().optional(),
+        created_by: z.string().optional(),
     });
-
-
 }
+

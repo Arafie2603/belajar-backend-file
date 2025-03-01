@@ -6,7 +6,7 @@ import { notulenValidation } from '../validation/notulenValidation';
 import { PaginatedResponse } from '../model/suratmasukModel';
 import { responseError } from '../error/responseError';
 import { MINIO_ENDPOINT, MINIO_PORT, minioClient } from '../helper/minioClient';
-import { ZodError } from 'zod';
+import { z, ZodError } from 'zod';
 
 const prisma = new PrismaClient();
 const BUCKET_NAME = "notulen";
@@ -78,83 +78,120 @@ export class NotulenService {
     static async createNotulen(
         request: CreateNotulenRequest,
         userId: string,
-        file: Express.Multer.File,
+        file?: Express.Multer.File,
     ): Promise<NotulenResponse> {
+        let fileUrl = "";
+
         try {
             const findNameUser = await prisma.user.findUnique({
                 where: { id: userId }
             });
 
-            if (!file) {
-                throw new responseError(400, 'File is required');
-            }
+            const { dokumen_lampiran, ...requestToValidate } = request;
 
-            const filename = `${Date.now()}-${file.originalname}`;
-            let fileUrl = '';
+            const parsedRequest = notulenValidation.NotulenValidation.safeParse(requestToValidate);
 
-            try {
-                // Ensure MinIO bucket exists
-                const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
-                if (!bucketExists) {
-                    await minioClient.makeBucket(BUCKET_NAME, "us-east-1");
-                }
+            if (!parsedRequest.success) {
+                console.error("Validation Error:", parsedRequest.error.format());
 
-                // Upload file to MinIO
-                await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
-                fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
-
-                const validateRequest = {
-                    ...request,
-                    dokumen_lampiran: fileUrl,
-                };
-
-                // Validate request
-                const validated = Validation.validate(
-                    notulenValidation.NotulenValidation,
-                    validateRequest
-                );
-
-                const tanggal = new Date(validated.tanggal);
-                if (isNaN(tanggal.getTime())) {
-                    throw new responseError(400, 'Invalid date format');
-                }
-
-                // Use transaction to ensure database and file operations are atomic
-                const notulen = await prisma.$transaction(async (tx) => {
-                    const result = await tx.notulen.create({
-                        data: {
-                            id: uuidv4(),
-                            judul: validated.judul,
-                            tanggal: tanggal,
-                            lokasi: validated.lokasi,
-                            pemimpin_rapat: validated.pemimpin_rapat,
-                            peserta: validated.peserta,
-                            agenda: validated.agenda,
-                            dokumen_lampiran: fileUrl,
-                            status: validated.status,
-                            updated_by: findNameUser?.nama || "",
-                            created_by: findNameUser?.nama || "",
-                            user_id: userId,
+                const flatErrors = parsedRequest.error.flatten();
+                const fieldErrors = Object.entries(flatErrors.fieldErrors)
+                    .map(([field, messages]) => {
+                        if (Array.isArray(messages)) {
+                            return `${field}: ${messages.join(', ')}`;
                         }
-                    });
-                    return result;
-                });
+                        return `${field}: invalid`;
+                    })
+                    .join('; ');
 
-                return toNotulenResponse(notulen);
-            } catch (error) {
-                if (fileUrl) {
-                    await this.deleteFileFromMinio(fileUrl);
+                if (fieldErrors) {
+                    throw new responseError(400, `Missing or invalid fields: ${fieldErrors}`);
                 }
-                throw error;
             }
+
+            const validatedRequest = parsedRequest.success ? parsedRequest.data : requestToValidate;
+
+            // Process file if it exists
+            if (file) {
+                const filename = `${Date.now()}-${file.originalname}`;
+
+                try {
+                    const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
+                    if (!bucketExists) {
+                        await minioClient.makeBucket(BUCKET_NAME, "us-east-1");
+                    }
+
+                    await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+                    fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
+                } catch (error) {
+                    console.error('Error uploading file:', error);
+                    throw new responseError(500, 'Error uploading file');
+                }
+            }
+
+            // Create a modifiedRequest to prevent direct mutation of validatedRequest
+            const modifiedRequest = { ...validatedRequest };
+
+            // Parse date correctly for Prisma and remove it from the spread object
+            let tanggalISO: Date;
+            try {
+                // Check if tanggal is a string and convert to Date
+                if (typeof modifiedRequest.tanggal === 'string') {
+                    // Add time component to ensure proper ISO format
+                    tanggalISO = new Date(`${modifiedRequest.tanggal}T00:00:00Z`);
+                } else {
+                    tanggalISO = new Date(modifiedRequest.tanggal);
+                }
+
+                if (isNaN(tanggalISO.getTime())) {
+                    throw new Error('Invalid date');
+                }
+
+                // Delete tanggal from modifiedRequest to prevent it from being spread
+                delete modifiedRequest.tanggal;
+
+            } catch (error) {
+                throw new responseError(400, 'Invalid date format');
+            }
+
+            console.log("ISO Date for Prisma:", tanggalISO.toISOString()); // Debugging
+
+            const notulen = await prisma.$transaction(async (tx) => {
+                const result = await tx.notulen.create({
+                    data: {
+                        id: uuidv4(),
+                        tanggal: tanggalISO, // Using properly parsed date object
+                        ...modifiedRequest, // Spread the object without tanggal
+                        dokumen_lampiran: fileUrl || null, // Set to null if no file uploaded
+                        updated_by: findNameUser?.nama || "",
+                        created_by: findNameUser?.nama || "",
+                        user_id: userId,
+                    }
+                });
+                return result;
+            });
+
+            return toNotulenResponse(notulen);
         } catch (error) {
+            if (fileUrl) {
+                try {
+                    await this.deleteFileFromMinio(fileUrl);
+                } catch (deleteError) {
+                    console.error("Error deleting file from Minio:", deleteError);
+                }
+            }
+
             console.error('Error creating notulen:', error);
+            if (error instanceof z.ZodError) {
+                throw new responseError(400, "Invalid request");
+            }
             if (error instanceof responseError) {
                 throw error;
             }
             throw new responseError(500, 'Internal server error');
         }
     }
+
 
     static async updateNotulen(
         userId: string,
