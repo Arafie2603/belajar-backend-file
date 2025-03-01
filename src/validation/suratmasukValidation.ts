@@ -13,7 +13,7 @@ export class suratmasukValidation {
         pengirim: z.string().nonempty("Pengirim harus diisi"),
         penerima: z.string().nonempty("Penerima harus diisi"),
         sifat_surat: z.string().nonempty("Sifat surat harus diisi"),
-        scan_surat: z.string().nonempty("Scan surat harus diisi"),
+        scan_surat: z.string().optional(),
         expired_data: z.string()
             .refine((date) => !isNaN(Date.parse(date)), {
                 message: "Invalid date format"

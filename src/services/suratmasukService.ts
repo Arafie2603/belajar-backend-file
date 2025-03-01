@@ -74,8 +74,8 @@ export class suratmasukService {
 
     static async createSuratmasuk(
         request: CreateSuratmasukRequest,
-        file: Express.Multer.File,
-        userId: string
+        userId: string,
+        file?: Express.Multer.File,
     ): Promise<SuratmasukResponseWithoutDispoisi> {
         const user = await prismaClient.user.findUnique({
             where: { id: userId }
@@ -88,25 +88,29 @@ export class suratmasukService {
         const modifiedRequest = {
             ...request,
             user_id: userId,
-            tanggal: typeof request.tanggal === 'string'
+            tanggal: request.tanggal && !isNaN(Date.parse(request.tanggal))
                 ? new Date(request.tanggal).toISOString()
-                : new Date(JSON.stringify(request.tanggal)).toISOString(),
-            expired_data: typeof request.expired_data === 'string'
+                : "",
+        
+            expired_data: request.expired_data && !isNaN(Date.parse(request.expired_data))
                 ? new Date(request.expired_data).toISOString()
-                : new Date(JSON.stringify(request.expired_data)).toISOString()
-        }
+                : "",
+        };
+        
 
         let fileUrl = '';
-        const filename = `${Date.now()}-${file.originalname}`;
 
         try {
-            const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
-            if (!bucketExists) {
-                await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
+            if (file) {
+                const filename = `${Date.now()}-${file?.originalname}`;
+                const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
+                if (!bucketExists) {
+                    await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
+                }
+    
+                await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+                fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
             }
-
-            await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
-            fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
 
             const requestWithFile = {
                 ...modifiedRequest,
@@ -118,6 +122,7 @@ export class suratmasukService {
                 suratmasukValidation.SuratmasukValidation,
                 requestWithFile
             );
+            
 
             const suratmasuk = await prismaClient.suratMasuk.create({
                 data: {
@@ -145,7 +150,6 @@ export class suratmasukService {
 
             return suratmasuk;
         } catch (error) {
-            // If anything fails, delete the uploaded file if it exists
             if (fileUrl) {
                 await this.deleteFileFromMinio(fileUrl);
             }

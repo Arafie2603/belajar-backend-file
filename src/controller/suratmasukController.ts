@@ -68,19 +68,10 @@ export class suratmasukController {
 
             console.log('Authenticate user: ', req.user);
 
-            if (!req.file) {
-                res.status(400).json({
-                    status: 400,
-                    message: 'File is required',
-                    errors: 'No file uploaded',
-                });
-                return;
-            }
-
             const suratMasuk = await suratmasukService.createSuratmasuk(
                 req.body,
+                req.user.id,
                 req.file,
-                req.user.id
             );
 
             res.status(201).json({
@@ -100,12 +91,12 @@ export class suratmasukController {
 
     static async updateSuratmasuk(req: Request, res: Response) {
         try {
-            // Ubah dari suratmasukId menjadi no_surat_masuk
-            const { no_surat_masuk } = req.params;  // Sesuaikan dengan nama parameter di route
+            
+            const { no_surat_masuk } = req.params;  
             const userId = req.user?.id || '';
             const file = req.file || null; 
             
-            console.log("Request Body:", req.body); // Tambahkan log untuk debugging
+            console.log("Request Body:", req.body); 
 
             
             const updatedSuratmasuk = await suratmasukService.updateSuratmasuk(
