@@ -61,7 +61,7 @@ export class usersController {
     static async register(req: Request, res: Response, next: NextFunction) {
         try {
             const request: CreateUserRequest = req.body as CreateUserRequest;
-            console.log("Register attempt:", request); // Logging request
+            console.log("Register attempt:", request); 
             const response = await userService.register(request);
             res.status(201).json({
                 data: response,
@@ -69,7 +69,7 @@ export class usersController {
                 message: 'User created successfully'
             });
         } catch (error: any) {
-            console.error("Error registering user:", error); // Logging error
+            console.error("Error registering user:", error); 
             if (error.status === 400) {
                 res.status(400).json({
                     status: 400,
@@ -117,8 +117,8 @@ export class usersController {
 
     static async updateUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const { nomor_identitas } = req.params
-            const updateUser = await userService.updateUser(nomor_identitas, req.body);
+            const { id } = req.params
+            const updateUser = await userService.updateUser(id, req.body);
             res.status(200).json({
                 data: updateUser,
                 status: 200,

@@ -6,7 +6,10 @@ import { prismaClient } from "../application/database";
 import { responseError } from "../error/responseError";
 import bcrypt from "bcrypt";
 import { createToken } from '../middleware/authMiddleware';
+import { Multer } from 'multer';
+import { MINIO_ENDPOINT, MINIO_PORT, minioClient } from '../helper/minioClient';
 
+const BUCKET_NAME = "asisten";
 export class userService {
     static async getAllUsers(page: number = 1, totalData: number = 10): Promise<PaginatedResponse<UserResponse>> {
         const skip = (page - 1) * totalData;
@@ -55,9 +58,28 @@ export class userService {
     }
 
 
-    static async register(request: CreateUserRequest): Promise<{ user: UserResponse, token: string }> {
+    static async register(
+        request: CreateUserRequest,
+        file?: Express.Multer.File
+    ): Promise<{ user: UserResponse, token: string }> {
         console.log("Received request:", request);
-        const registerRequest = Validation.validate(userValidation.REGISTER, request);
+        let fileUrl = "";
+
+        if (file) {
+            const filename = `${file?.originalname}`;
+            const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
+            if (!bucketExists) {
+                await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
+            }
+
+            await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+            fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
+        }
+        const modifiedRequest = {
+            ...request,
+            foto: fileUrl,
+        }
+        const registerRequest = Validation.validate(userValidation.REGISTER, modifiedRequest);
 
         const totalUserWithSameUsername = await prismaClient.user.count({
             where: {
@@ -124,12 +146,17 @@ export class userService {
         };
     }
 
-    static async updateUser(nomor_identitas: string, request: Partial<CreateUserRequest>): Promise<UserResponse> {
+    static async updateUser(
+        id: string, 
+        request: Partial<CreateUserRequest>,
+        file?: Express.Multer.File,
+
+    ): Promise<UserResponse> {
         const updateRequest = Validation.validate(userValidation.UPDATE, request);
 
         const checkedUser = await prismaClient.user.findUnique({
-            where: { 
-                nomor_identitas: nomor_identitas
+            where: {
+                id: id,
             }
         })
         if (updateRequest.password) {
@@ -143,7 +170,7 @@ export class userService {
         const { role_id, password, ...userData } = updateRequest;
         const user = await prismaClient.user.update({
             where: {
-                nomor_identitas: nomor_identitas,
+                id: id,
             },
             data: {
                 ...userData,
@@ -215,5 +242,5 @@ export class userService {
         }
     }
 
-    
+
 }

@@ -1,6 +1,7 @@
 import express from 'express';
 import { usersController } from '../controller/userController';
 import { authMiddleware, refreshJWT } from '../middleware/authMiddleware';
+import { upload } from '../middleware/mutler';
 
 
 const router = express.Router();
@@ -368,7 +369,7 @@ router.get('/profile', authMiddleware, usersController.getProfile);
  *                 message: "Internal Server Error"
  */
 
-router.post('/register', usersController.register);
+router.post('/register', upload.single('foto') ,usersController.register);
 
 /**
  * @swagger

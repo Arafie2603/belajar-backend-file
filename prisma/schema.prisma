@@ -24,6 +24,12 @@ model User {
   id String @id @default(uuid())
   nomor_identitas String @unique @db.VarChar(100)
   nama String
+  foto String?
+  alamat String?
+  fakultas String?
+  prodi String?
+  jabatan String?
+  no_telp String?
   password String @db.VarChar(100)
   createdAt   DateTime      @default(now())
   role_id String
@@ -52,15 +58,17 @@ model Notulen {
 
 model TokenBlacklist {
   id        String   @id @default(uuid())
-  token     String   @unique @db.VarChar(500)  // Menggunakan VARCHAR(500) untuk token JWT
+  token     String   @unique @db.VarChar(500)  
   createdAt DateTime @default(now())
-
   @@map("TokenBlacklist")
 }
 
 model Faktur {
   id String @id @default(uuid())
+  jumlah_pengeluaran Decimal?
   bukti_pembayaran String
+  metode_pembayaran String
+  status_pembayaran String
   createdAt DateTime @default(now())
   deskripsi String
 }
