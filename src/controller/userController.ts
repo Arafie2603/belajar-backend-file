@@ -62,7 +62,7 @@ export class usersController {
         try {
             const request: CreateUserRequest = req.body as CreateUserRequest;
             console.log("Register attempt:", request); 
-            const response = await userService.register(request);
+            const response = await userService.register(request, req.file);
             res.status(201).json({
                 data: response,
                 status: 201,
@@ -118,7 +118,7 @@ export class usersController {
     static async updateUser(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params
-            const updateUser = await userService.updateUser(id, req.body);
+            const updateUser = await userService.updateUser(id, req.body, req.file);
             res.status(200).json({
                 data: updateUser,
                 status: 200,

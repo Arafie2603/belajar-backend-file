@@ -100,6 +100,7 @@ export class userService {
             data: {
                 id: uuidv4(),
                 ...userData,
+                foto: modifiedRequest.foto,
                 role: role_id ? { connect: { role_id } } : { create: { role_id: uuidv4(), nama: 'user' } },
             },
             include: {
@@ -113,6 +114,18 @@ export class userService {
             user: toUserResponse(user),
             token,
 
+        }
+    }
+    private static async deleteFileFromMinio(fileUrl: string): Promise<void> {
+        try {
+            const url = new URL(fileUrl);
+            const filePath = url.pathname.split('/').pop();
+            if (filePath) {
+                await minioClient.removeObject(BUCKET_NAME, filePath);
+            }
+        } catch (error) {
+            console.error("Error deleting file from MinIO:", error);
+            throw new Error("Failed to delete file from storage");
         }
     }
 
@@ -147,13 +160,49 @@ export class userService {
     }
 
     static async updateUser(
-        id: string, 
+        id: string,
         request: Partial<CreateUserRequest>,
         file?: Express.Multer.File,
 
     ): Promise<UserResponse> {
-        const updateRequest = Validation.validate(userValidation.UPDATE, request);
 
+        const existingUser = await prismaClient.user.findUnique({
+            where: { id: id }
+        });
+
+        if (!existingUser) {
+            throw new Error(`User with ID ${id} not found`);
+        }
+        let fileUrl = existingUser.foto;
+        console.log("NGE LOG", file)
+        if (file) {
+            try {
+                if (existingUser.foto && existingUser.foto != "") {
+                    await this.deleteFileFromMinio(existingUser.foto);
+                }
+        
+                const filename = `${file.originalname}`;
+                const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
+                if (!bucketExists) {
+                    await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
+                }
+        
+                await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+                fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
+            } catch (error) {
+                console.error("Error updating file in MinIO:", error);
+                throw new Error("Failed to update file in storage");
+            }
+        }
+
+        
+        const modifiedRequest = {
+            ...request,
+            foto: fileUrl
+        }
+
+        const updateRequest = Validation.validate(userValidation.UPDATE, modifiedRequest);
+        console.log("LOG LAGI",updateRequest.foto);
         const checkedUser = await prismaClient.user.findUnique({
             where: {
                 id: id,
@@ -163,8 +212,10 @@ export class userService {
             updateRequest.password = await bcrypt.hash(updateRequest.password, 10);
         }
 
+
+
         if (!checkedUser) {
-            throw new responseError(404, "Nomor identitas not found");
+            throw new responseError(404, `User with id ${id} not found`);
         }
 
         const { role_id, password, ...userData } = updateRequest;
@@ -174,6 +225,7 @@ export class userService {
             },
             data: {
                 ...userData,
+                foto: modifiedRequest.foto,
                 role_id: role_id ? { connect: { role_id: role_id } } : undefined,
             },
             include: {
@@ -192,6 +244,9 @@ export class userService {
         if (!checkedUser) {
             throw new responseError(404, "Nomor identitas not found");
         }
+        if (checkedUser.foto) {
+            await this.deleteFileFromMinio(checkedUser.foto);
+        }
         await prismaClient.user.delete({
             where: {
                 nomor_identitas: nomor_identitas,
@@ -205,17 +260,14 @@ export class userService {
                 throw new responseError(400, "Token is required");
             }
 
-            // Cek apakah token sudah ada di blacklist
             const existingToken = await prismaClient.tokenBlacklist.findUnique({
                 where: { token }
             });
 
             if (existingToken) {
-                // Token sudah di-blacklist, anggap logout berhasil
                 return;
             }
 
-            // Tambahkan token ke blacklist
             await prismaClient.tokenBlacklist.create({
                 data: {
                     token

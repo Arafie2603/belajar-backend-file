@@ -595,7 +595,7 @@ router.get('/', authMiddleware, usersController.getAllUsers);
  */
 
 
-router.patch('/:nomor_identitas', authMiddleware, usersController.updateUser);
+router.patch('/:id', upload.single('foto') ,authMiddleware, usersController.updateUser);
 
 /**
  * @swagger
