@@ -201,27 +201,49 @@ router.post('/refresh', authMiddleware, refreshJWT);
  *                 data:
  *                   type: object
  *                   properties:
- *                     id:
- *                       type: string
- *                     nama:
- *                       type: string
- *                     nomor_identitas:
- *                       type: string
- *                     password:
- *                       type: string
- *                     role:
- *                       type: string
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         nama:
+ *                           type: string
+ *                         nomor_identitas:
+ *                           type: string
+ *                         fakultas:
+ *                           type: string
+ *                         prodi:
+ *                           type: string
+ *                         foto:
+ *                           type: string
+ *                         alamat:
+ *                           type: string
+ *                         jabatan:
+ *                           type: string
+ *                         password:
+ *                           type: string
+ *                         no_telp:
+ *                           type: string
+ *                         role:
+ *                           type: string
  *                 status:
  *                   type: integer
  *                 message:
  *                   type: string
  *               example:
  *                 data:
- *                   id: "4d0d748b-7414-4de3-9a40-e7523d9cd6a8"
- *                   nama: "Aralasia"
- *                   nomor_identitas: "22222222"
- *                   password: "$2b$10$d1cKkTnIaR8BKsvhr/RdreIkfd8nHbZhrm2K/AOU749Z3uPf6G7RK"
- *                   role: "user"
+ *                   user:
+ *                     id: "4d35d7bd-3b56-4f42-bce3-c7458179765a"
+ *                     nama: "Arafie"
+ *                     nomor_identitas: "2111500341"
+ *                     fakultas: "FTI"
+ *                     prodi: "Teknik Informatika"
+ *                     foto: "http://bucket-production-2f24.up.railway.app:443/asisten/Aotearoa.jpg"
+ *                     alamat: ""
+ *                     jabatan: "presiden kerajaan mueshern"
+ *                     password: "$2b$10$grHvmCKgZARg1z9Afy9W5uprcbsIbU.BxJCWSFUJG7zGegNjWXzwm"
+ *                     no_telp: "+60787293"
+ *                     role: "user"
  *                 status: 200
  *                 message: "Profile retrieved successfully"
  *       401:
@@ -273,6 +295,7 @@ router.post('/refresh', authMiddleware, refreshJWT);
 
 router.get('/profile', authMiddleware, usersController.getProfile);
 
+
 /**
  * @swagger
  * /api/users/register:
@@ -280,24 +303,43 @@ router.get('/profile', authMiddleware, usersController.getProfile);
  *     summary: "Registrasi pengguna baru"
  *     tags:
  *       - Users
- *     description: "Registrasi pengguna baru dengan nomor identitas, nama, dan password."
+ *     description: "Registrasi pengguna baru dengan nomor identitas, nama, password, dan data lainnya."
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               nomor_identitas:
- *                 type: string
  *               nama:
+ *                 type: string
+ *               foto:
+ *                 type: string
+ *                 format: binary
+ *               alamat:
+ *                 type: string
+ *               fakultas:
+ *                 type: string
+ *               prodi:
+ *                 type: string
+ *               jabatan:
+ *                 type: string
+ *               nomor_identitas:
  *                 type: string
  *               password:
  *                 type: string
+ *               no_telp:
+ *                 type: string
  *             example:
- *               nomor_identitas: "21115733333333"
- *               nama: "Aralasia"
+ *               nama: "Arafie"
+ *               foto: ""
+ *               alamat: "Jalan Merdeka No. 1"
+ *               fakultas: "FTI"
+ *               prodi: "Teknik Informatika"
+ *               jabatan: "presiden kerajaan mueshern"
+ *               nomor_identitas: "2111500341"
  *               password: "123"
+ *               no_telp: "+60787293"
  *     responses:
  *       201:
  *         description: "Pengguna berhasil dibuat"
@@ -318,7 +360,19 @@ router.get('/profile', authMiddleware, usersController.getProfile);
  *                           type: string
  *                         nomor_identitas:
  *                           type: string
+ *                         fakultas:
+ *                           type: string
+ *                         prodi:
+ *                           type: string
+ *                         foto:
+ *                           type: string
+ *                         alamat:
+ *                           type: string
+ *                         jabatan:
+ *                           type: string
  *                         password:
+ *                           type: string
+ *                         no_telp:
  *                           type: string
  *                         role:
  *                           type: string
@@ -331,12 +385,18 @@ router.get('/profile', authMiddleware, usersController.getProfile);
  *               example:
  *                 data:
  *                   user:
- *                     id: "5b6eb17f-5a1d-4e50-8e66-52933af99081"
- *                     nama: "Aralasia"
- *                     nomor_identitas: "21115733333333"
- *                     password: "$2b$10$UZHJRpNXqF7TSGRTLedLqeMcZzyIB04IDdrrdefSnN5V1RZ7i53X2"
+ *                     id: "4d35d7bd-3b56-4f42-bce3-c7458179765a"
+ *                     nama: "Arafie"
+ *                     nomor_identitas: "2111500341"
+ *                     fakultas: "FTI"
+ *                     prodi: "Teknik Informatika"
+ *                     foto: "http://bucket-production-2f24.up.railway.app:443/asisten/Aotearoa.jpg"
+ *                     alamat: "Jalan Merdeka No. 1"
+ *                     jabatan: "presiden kerajaan mueshern"
+ *                     password: "$2b$10$grHvmCKgZARg1z9Afy9W5uprcbsIbU.BxJCWSFUJG7zGegNjWXzwm"
+ *                     no_telp: "+60787293"
  *                     role: "user"
- *                   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjViNmViMTdmLTVhMWQtNGU1MC04ZTY2LTUyOTMzYWY5OTA4MSIsInJvbGUiOnsicm9sZV9pZCI6ImY3NWJhNWRiLWY0ZjAtNDJkMy04OGZkLTg0MGEyMjljMjRiNSIsIm5hbWEiOiJ1c2VyIn0sImlhdCI6MTczODU5MDM5NywiZXhwIjoxNzM4Njc2Nzk3fQ.WouavO93KbwR1ddDMh5cOjXKR_UGt2QCp4CWzqQXnJ8"
+ *                   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMzVkN2JkLTNiNTYtNGY0Mi1iY2UzLWM3NDU4MTc5NzY1YSIsInJvbGUiOnsicm9sZV9pZCI6ImE1OTg3YmI0LWY4ZTctNDlkZS04ODExLWQ1MWE0Y2Q1YWM4MyIsIm5hbWEiOiJ1c2VyIn0sImlhdCI6MTc0MDkwMDQ4OCwiZXhwIjoxNzQwOTg2ODg4fQ.BwHdpZ91An0GUqgEg8b8vyl-rWu87eVlipjk_5Y_zA8"
  *                 status: 201
  *                 message: "User created successfully"
  *       400:
@@ -368,6 +428,7 @@ router.get('/profile', authMiddleware, usersController.getProfile);
  *                 status: 500
  *                 message: "Internal Server Error"
  */
+
 
 router.post('/register', upload.single('foto') ,usersController.register);
 
@@ -414,9 +475,23 @@ router.post('/register', upload.single('foto') ,usersController.register);
  *                         properties:
  *                           id:
  *                             type: string
+ *                           nama:
+ *                             type: string
  *                           nomor_identitas:
  *                             type: string
+ *                           fakultas:
+ *                             type: string
+ *                           prodi:
+ *                             type: string
+ *                           foto:
+ *                             type: string
+ *                           alamat:
+ *                             type: string
+ *                           jabatan:
+ *                             type: string
  *                           password:
+ *                             type: string
+ *                           no_telp:
  *                             type: string
  *                           role:
  *                             type: string
@@ -449,16 +524,15 @@ router.post('/register', upload.single('foto') ,usersController.register);
  *                 data:
  *                   paginatedData:
  *                     - id: "3c823d31-c869-4517-bad7-3b0b368f0f10"
- *                       nomor_identitas: "1111111"
+ *                       nama: "Arafie"
+ *                       nomor_identitas: "2111500341"
+ *                       fakultas: "FTI"
+ *                       prodi: "Teknik Informatika"
+ *                       foto: "http://bucket-production-2f24.up.railway.app:443/asisten/Aotearoa.jpg"
+ *                       alamat: ""
+ *                       jabatan: "presiden kerajaan mueshern"
  *                       password: "$2b$10$UltoGgWlBlBMyNzjZUJRTOyw1/PXcQwhQ9OEyhMuL5VcsiCWxFgyO"
- *                       role: "user"
- *                     - id: "b659245d-f148-419f-b44a-374b3234e815"
- *                       nomor_identitas: "2111500340"
- *                       password: "$2b$10$MVE.62VJaLLAlAcReKtAnORXhgkW9Z.qLuC3rEGGRe2yAcClHSUie"
- *                       role: "user"
- *                     - id: "efe86594-2345-4136-9c95-be92a115dee9"
- *                       nomor_identitas: "21115733333333"
- *                       password: "$2b$10$pylr.KNnq5YKjVsHRitO3erNwfk3GdZzLmmcEX7OvsVVGEaP18uYi"
+ *                       no_telp: "+60787293"
  *                       role: "user"
  *                   meta:
  *                     currentPage: 1
@@ -466,7 +540,7 @@ router.post('/register', upload.single('foto') ,usersController.register);
  *                     itemsPerPage: 10
  *                     unpaged: false
  *                     totalPages: 1
- *                     totalItems: 3
+ *                     totalItems: 1
  *                     sortBy: []
  *                     filter: {}
  *                 status: 200
@@ -490,40 +564,63 @@ router.post('/register', upload.single('foto') ,usersController.register);
 router.get('/', authMiddleware, usersController.getAllUsers);
 
 
+
 /**
  * @swagger
- * /api/users/{nomor_identitas}:
+ * /api/users/{id}:
  *   patch:
- *     summary: "Memperbarui pengguna berdasarkan nomor identitas"
+ *     summary: "Memperbarui pengguna berdasarkan ID"
  *     tags:
  *       - Users
- *     description: "Memperbarui pengguna berdasarkan nomor identitas yang diberikan."
+ *     description: "Memperbarui pengguna berdasarkan ID yang diberikan."
  *     security:
  *       - BearerAuth: []
  *     parameters:
- *       - name: nomor_identitas
+ *       - name: id
  *         in: path
- *         description: "Nomor identitas pengguna yang ingin diperbarui"
+ *         description: "ID pengguna yang ingin diperbarui"
  *         required: true
  *         schema:
  *           type: string
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               nomor_identitas:
- *                 type: string
  *               nama:
+ *                 type: string
+ *               foto:
+ *                 type: string
+ *                 format: binary
+ *               alamat:
+ *                 type: string
+ *               fakultas:
+ *                 type: string
+ *               prodi:
+ *                 type: string
+ *               jabatan:
+ *                 type: string
+ *               nomor_identitas:
  *                 type: string
  *               password:
  *                 type: string
+ *               no_telp:
+ *                 type: string
+ *               role_id:
+ *                 type: string
  *             example:
- *               nomor_identitas: "222222222"
- *               nama: "Eralasia"
+ *               nama: "Arafie"
+ *               foto: ""
+ *               alamat: "Jalan Merdeka No. 1"
+ *               fakultas: "FTI"
+ *               prodi: "Teknik Informatika"
+ *               jabatan: "presiden kerajaan mueshern"
+ *               nomor_identitas: "2111500341"
  *               password: "123"
+ *               no_telp: "+60787293"
+ *               role_id: "1"
  *     responses:
  *       200:
  *         description: "Pengguna berhasil diperbarui"
@@ -541,7 +638,19 @@ router.get('/', authMiddleware, usersController.getAllUsers);
  *                       type: string
  *                     nomor_identitas:
  *                       type: string
+ *                     fakultas:
+ *                       type: string
+ *                     prodi:
+ *                       type: string
+ *                     foto:
+ *                       type: string
+ *                     alamat:
+ *                       type: string
+ *                     jabatan:
+ *                       type: string
  *                     password:
+ *                       type: string
+ *                     no_telp:
  *                       type: string
  *                     role:
  *                       type: string
@@ -552,14 +661,20 @@ router.get('/', authMiddleware, usersController.getAllUsers);
  *               example:
  *                 data:
  *                   id: "510ff921-b6ca-4b6d-b916-a69dad29df99"
- *                   nama: "Eralasia"
- *                   nomor_identitas: "222222222"
+ *                   nama: "Arafie"
+ *                   nomor_identitas: "2111500341"
+ *                   fakultas: "FTI"
+ *                   prodi: "Teknik Informatika"
+ *                   foto: "http://bucket-production-2f24.up.railway.app:443/asisten/Aotearoa.jpg"
+ *                   alamat: "Jalan Merdeka No. 1"
+ *                   jabatan: "presiden kerajaan mueshern"
  *                   password: "$2b$10$sj2/0t5sUeIveXD9StivVuf0kQcxehD4CiGMvMEyKxcR6yc3pxwOi"
+ *                   no_telp: "+60787293"
  *                   role: "user"
  *                 status: 200
  *                 message: "User updated successfully"
  *       404:
- *         description: "Nomor identitas tidak ditemukan"
+ *         description: "ID pengguna tidak ditemukan"
  *         content:
  *           application/json:
  *             schema:
@@ -573,7 +688,7 @@ router.get('/', authMiddleware, usersController.getAllUsers);
  *                   type: string
  *               example:
  *                 status: 404
- *                 message: "Nomor identitas not found"
+ *                 message: "ID pengguna tidak ditemukan"
  *                 errors: null
  *       500:
  *         description: "Kesalahan Server Internal"
@@ -594,8 +709,8 @@ router.get('/', authMiddleware, usersController.getAllUsers);
  *                 errors: "User Not Found"
  */
 
+router.patch('/:id', upload.single('foto'), authMiddleware, usersController.updateUser);
 
-router.patch('/:id', upload.single('foto') ,authMiddleware, usersController.updateUser);
 
 /**
  * @swagger
