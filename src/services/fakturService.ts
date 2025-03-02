@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { CreateFakturRequest, UpdateNomorSuraRequest, FakturResponse, toFakturResponse, PaginatedResponse } from '../model/fakturModel';
+import { CreateFakturRequest, FakturResponse, toFakturResponse, PaginatedResponse, UpdateFakturRequest } from '../model/fakturModel';
 import { responseError } from '../error/responseError';
 import { fakturValidation } from '../validation/fakturValidation';
 import { z, ZodError } from 'zod';
@@ -25,27 +25,36 @@ export class FakturService {
     static async createFaktur(
         request: CreateFakturRequest,
         userId: string,
-        file: Express.Multer.File,
+        file?: Express.Multer.File,
     ): Promise<FakturResponse> {
         try {
-            const validatedRequest = fakturValidation.CreateFakturValidation.parse(request);
+            let fileUrl = "";
+            const validatedRequest = fakturValidation.CreateFakturValidation.parse({
+                ...request,
+                jumlah_pengeluaran: request.jumlah_pengeluaran ? Number(request.jumlah_pengeluaran) : undefined
+            });
 
-            const filename = `${Date.now()}-${file.originalname}`;
+            if (file) {
+                const filename = `${Date.now()}-${file.originalname}`;
 
-            const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
-            if (!bucketExists) {
-                await minioClient.makeBucket(BUCKET_NAME, "us-east-1");
+                const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
+                if (!bucketExists) {
+                    await minioClient.makeBucket(BUCKET_NAME, "us-east-1");
+                }
+
+                await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
+                fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
             }
-
-            await minioClient.putObject(BUCKET_NAME, filename, file.buffer);
-            const fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
 
             const faktur = await prismaClient.faktur.create({
                 data: {
                     ...validatedRequest,
                     bukti_pembayaran: fileUrl || "",
-                    userId
-                }
+                    user: {
+                        connect: { id: userId }
+                    }
+                },
+                include: { user: true }
             });
 
             return toFakturResponse(faktur);
@@ -65,10 +74,15 @@ export class FakturService {
             throw new responseError(500, "Internal server error");
         }
     }
-    
+
+
+
     static async getFakturById(id: string): Promise<FakturResponse> {
         try {
-            const faktur = await prismaClient.faktur.findUnique({ where: { id } });
+            const faktur = await prismaClient.faktur.findUnique({ 
+                where: { id },
+                include: { user: true },
+            });
             if (!faktur) {
                 throw new responseError(404, `Faktur with ID ${id} not found`);
             }
@@ -86,7 +100,8 @@ export class FakturService {
 
     static async updateFaktur(
         id: string,
-        request: UpdateNomorSuraRequest,
+        userId: string,
+        request: UpdateFakturRequest,
         file?: Express.Multer.File,
     ): Promise<FakturResponse> {
         try {
@@ -99,13 +114,11 @@ export class FakturService {
             let fileUrl = findFaktur.bukti_pembayaran;
 
             if (file) {
-                // Delete old file first
-                if (findFaktur.bukti_pembayaran) {
+                if (findFaktur.bukti_pembayaran && findFaktur.bukti_pembayaran != "") {
                     await this.deleteFileFromMinio(findFaktur.bukti_pembayaran);
                 }
 
-                // Upload new file
-                const filename = `${Date.now()}-${file.originalname}`;
+                const filename = `${file.originalname}`;
                 const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
                 if (!bucketExists) {
                     await minioClient.makeBucket(BUCKET_NAME, "us-east-1");
@@ -115,18 +128,27 @@ export class FakturService {
                 fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
             }
 
-            const validateRequest = {
+            const validateRequest = fakturValidation.UpdateFakturValidation.parse({
                 ...request,
                 bukti_pembayaran: fileUrl,
-            };
+            });
 
             const faktur = await prismaClient.faktur.update({
                 where: { id },
-                data: validateRequest
+                data: {
+                    ...validateRequest,
+                    jumlah_pengeluaran: validateRequest.jumlah_pengeluaran,
+                    metode_pembayaran: validateRequest.metode_pembayaran,
+                    status_pembayaran: validateRequest.status_pembayaran,
+                    user: {
+                        connect: { id: userId }
+                    }
+                },
+                include: { user: true }
             });
             return toFakturResponse(faktur);
         } catch (error) {
-            if (error instanceof ZodError) {
+            if (error instanceof z.ZodError) {
                 throw new responseError(400, 'Validation Error: ' + error.errors.map(e => e.message).join(', '));
             } else if (error instanceof responseError) {
                 throw error;
@@ -135,6 +157,7 @@ export class FakturService {
             throw new responseError(500, 'Internal server error');
         }
     }
+
 
     static async deleteFaktur(id: string): Promise<void> {
         try {
@@ -183,7 +206,8 @@ export class FakturService {
                 where,
                 orderBy: {
                     createdAt: 'desc',
-                }
+                },
+                include: { user: true }
             }),
             prismaClient.faktur.count({ where }),
         ]);
@@ -204,4 +228,5 @@ export class FakturService {
             }
         };
     }
+
 }

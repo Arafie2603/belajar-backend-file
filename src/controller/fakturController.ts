@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, response } from 'express';
 import { FakturService } from '../services/fakturService';
-import { CreateFakturRequest, UpdateNomorSuraRequest } from '../model/fakturModel';
+import { CreateFakturRequest, UpdateFakturRequest } from '../model/fakturModel';
 import { responseError } from '../error/responseError';
 
 export class FakturController {
@@ -8,11 +8,6 @@ export class FakturController {
         try {
             if (!req.user) {
                 res.status(401).json({ status: 401, message: 'Unauthorized' });
-                return;
-            }
-    
-            if (!req.file) {
-                res.status(400).json({ status: 400, message: 'File is required' });
                 return;
             }
     
@@ -64,7 +59,7 @@ export class FakturController {
 
     static async updateFaktur(req: Request, res: Response, next: NextFunction): Promise<void> {
         const { id } = req.params;
-        const request: UpdateNomorSuraRequest = req.body;
+        const request: UpdateFakturRequest = req.body;
 
         try {
             if (!req.user) {
@@ -75,15 +70,7 @@ export class FakturController {
                 return;
             }
 
-            if (!req.file) {
-                res.status(400).json({
-                    status: 400,
-                    message: 'File is required',
-                });
-                return;
-            }
-
-            const faktur = await FakturService.updateFaktur(id, request, req.file);
+            const faktur = await FakturService.updateFaktur(id, req.user?.id, request, req.file);
 
             res.status(200).json({
                 status: 200,

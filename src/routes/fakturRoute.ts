@@ -49,10 +49,26 @@ const router = express.Router();
  *                             type: string
  *                           bukti_pembayaran:
  *                             type: string
- *                             example: "http://192.168.1.4:9000/faktur/1739204905531-images.jpeg"
+ *                             example: "http://bucket-production-2f24.up.railway.app:443/faktur/images.jpeg"
  *                           deskripsi:
  *                             type: string
- *                             example: "Test123"
+ *                           jumlah_pengeluaran:
+ *                             type: number
+ *                           metode_pembayaran:
+ *                             type: string
+ *                           status_pembayaran:
+ *                             type: string
+ *                           user:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                               nama:
+ *                                 type: string
+ *                               jabatan:
+ *                                 type: string
+ *                               nomor_identitas:
+ *                                 type: string
  *                     meta:
  *                       type: object
  *                       properties:
@@ -83,19 +99,24 @@ const router = express.Router();
  *               example:
  *                 data:
  *                   paginatedData:
- *                     - id: "ac21ac01-bccd-46c1-88ff-02328df09adc"
- *                       bukti_pembayaran: "http://192.168.1.4:9000/faktur/1739204905531-images.jpeg"
- *                       deskripsi: "Test123"
- *                     - id: "ee19d83f-9669-4c5c-8495-246c233ba02a"
- *                       bukti_pembayaran: "http://192.168.1.4:9000/faktur/1739204006457-images.jpeg"
- *                       deskripsi: "Testing"
+ *                     - id: "f3883433-7881-47a2-b102-7d829d36ad58"
+ *                       bukti_pembayaran: "http://bucket-production-2f24.up.railway.app:443/faktur/images.jpeg"
+ *                       deskripsi: "pengeluaran barang"
+ *                       jumlah_pengeluaran: 1000
+ *                       metode_pembayaran: "cash"
+ *                       status_pembayaran: "lunas"
+ *                       user:
+ *                         id: "443c97ea-6df0-4850-9e0a-ab6e908d89ac"
+ *                         nama: "Arafie"
+ *                         jabatan: "presiden kerajaan mueshern"
+ *                         nomor_identitas: "2111500340"
  *                   meta:
  *                     currentPage: 1
  *                     offset: 0
  *                     itemsPerPage: 10
  *                     unpaged: false
  *                     totalPages: 1
- *                     totalItems: 2
+ *                     totalItems: 1
  *                     sortBy: []
  *                     filter: {}
  *                 status: 200
@@ -128,6 +149,7 @@ const router = express.Router();
  *                   example: "Internal server error"
  */
 router.get('/', authMiddleware, FakturController.getAllFaktur);
+
 
 
 /**
@@ -165,19 +187,51 @@ router.get('/', authMiddleware, FakturController.getAllFaktur);
  *                       type: string
  *                     bukti_pembayaran:
  *                       type: string
- *                       example: "http://192.168.1.4:9000/faktur/1739204905531-images.jpeg"
+ *                       example: "http://bucket-production-2f24.up.railway.app:443/faktur/images.jpeg"
  *                     deskripsi:
  *                       type: string
- *                       example: "Test123"
+ *                       example: "pengeluaran barang"
+ *                     jumlah_pengeluaran:
+ *                       type: number
+ *                       example: 1000
+ *                     metode_pembayaran:
+ *                       type: string
+ *                       example: "cash"
+ *                     status_pembayaran:
+ *                       type: string
+ *                       example: "lunas"
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "443c97ea-6df0-4850-9e0a-ab6e908d89ac"
+ *                         nama:
+ *                           type: string
+ *                           example: "Arafie"
+ *                         jabatan:
+ *                           type: string
+ *                           example: "presiden kerajaan mueshern"
+ *                         nomor_identitas:
+ *                           type: string
+ *                           example: "2111500340"
  *                 message:
  *                   type: string
  *                   example: "Faktur retrieved successfully"
  *               example:
  *                 status: 200
  *                 data:
- *                   id: "ac21ac01-bccd-46c1-88ff-02328df09adc"
- *                   bukti_pembayaran: "http://192.168.1.4:9000/faktur/1739204905531-images.jpeg"
- *                   deskripsi: "Test123"
+ *                   id: "f3883433-7881-47a2-b102-7d829d36ad58"
+ *                   bukti_pembayaran: "http://bucket-production-2f24.up.railway.app:443/faktur/images.jpeg"
+ *                   deskripsi: "pengeluaran barang"
+ *                   jumlah_pengeluaran: 1000
+ *                   metode_pembayaran: "cash"
+ *                   status_pembayaran: "lunas"
+ *                   user:
+ *                     id: "443c97ea-6df0-4850-9e0a-ab6e908d89ac"
+ *                     nama: "Arafie"
+ *                     jabatan: "presiden kerajaan mueshern"
+ *                     nomor_identitas: "2111500340"
  *                 message: "Faktur retrieved successfully"
  *       404:
  *         description: "Faktur tidak ditemukan"
@@ -233,6 +287,15 @@ router.get('/:id', authMiddleware, FakturController.getFakturById);
  *               deskripsi:
  *                 type: string
  *                 description: "Deskripsi faktur"
+ *               jumlah_pengeluaran:
+ *                 type: number
+ *                 description: "Jumlah pengeluaran"
+ *               metode_pembayaran:
+ *                 type: string
+ *                 description: "Metode pembayaran"
+ *               status_pembayaran:
+ *                 type: string
+ *                 description: "Status pembayaran"
  *     responses:
  *       201:
  *         description: "Faktur created successfully"
@@ -251,19 +314,47 @@ router.get('/:id', authMiddleware, FakturController.getFakturById);
  *                       type: string
  *                     bukti_pembayaran:
  *                       type: string
- *                       example: "http://192.168.1.4:9000/faktur/1739205205498-images.jpeg"
+ *                       example: "http://bucket-production-2f24.up.railway.app:443/faktur/1740903852719-images.jpeg"
  *                     deskripsi:
  *                       type: string
- *                       example: "Test123"
+ *                       example: "pengeluaran barang"
+ *                     jumlah_pengeluaran:
+ *                       type: number
+ *                       example: 1000
+ *                     metode_pembayaran:
+ *                       type: string
+ *                       example: "cash"
+ *                     status_pembayaran:
+ *                       type: string
+ *                       example: "lunas"
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         nama:
+ *                           type: string
+ *                         jabatan:
+ *                           type: string
+ *                         nomor_identitas:
+ *                           type: string
  *                 message:
  *                   type: string
  *                   example: "Faktur created successfully"
  *               example:
  *                 status: 201
  *                 data:
- *                   id: "24cd3d35-02f1-43be-ae41-6d718fe019d7"
- *                   bukti_pembayaran: "http://192.168.1.4:9000/faktur/1739205205498-images.jpeg"
- *                   deskripsi: "Test123"
+ *                   id: "4a6d7d64-3722-4923-8a9c-1c64b1c69f6e"
+ *                   bukti_pembayaran: "http://bucket-production-2f24.up.railway.app:443/faktur/1740903852719-images.jpeg"
+ *                   deskripsi: "pengeluaran barang"
+ *                   jumlah_pengeluaran: 1000
+ *                   metode_pembayaran: "cash"
+ *                   status_pembayaran: "lunas"
+ *                   user:
+ *                     id: "443c97ea-6df0-4850-9e0a-ab6e908d89ac"
+ *                     nama: "Arafie"
+ *                     jabatan: "presiden kerajaan mueshern"
+ *                     nomor_identitas: "2111500340"
  *                 message: "Faktur created successfully"
  *       400:
  *         description: "Kesalahan input data"
@@ -293,6 +384,7 @@ router.get('/:id', authMiddleware, FakturController.getFakturById);
  *                   example: "Internal server error"
  */
 router.post('/', upload.single('bukti_pembayaran'), authMiddleware, FakturController.createFaktur);
+
 
 
 /**
@@ -326,6 +418,15 @@ router.post('/', upload.single('bukti_pembayaran'), authMiddleware, FakturContro
  *               deskripsi:
  *                 type: string
  *                 description: "Deskripsi faktur"
+ *               jumlah_pengeluaran:
+ *                 type: number
+ *                 description: "Jumlah pengeluaran"
+ *               metode_pembayaran:
+ *                 type: string
+ *                 description: "Metode pembayaran"
+ *               status_pembayaran:
+ *                 type: string
+ *                 description: "Status pembayaran"
  *     responses:
  *       200:
  *         description: "Faktur updated successfully"
@@ -344,10 +445,30 @@ router.post('/', upload.single('bukti_pembayaran'), authMiddleware, FakturContro
  *                       type: string
  *                     bukti_pembayaran:
  *                       type: string
- *                       example: "http://192.168.1.4:9000/faktur/1739205465983-images.jpeg"
+ *                       example: "http://bucket-production-2f24.up.railway.app:443/faktur/1739205465983-images.jpeg"
  *                     deskripsi:
  *                       type: string
  *                       example: "test"
+ *                     jumlah_pengeluaran:
+ *                       type: number
+ *                       example: 1000
+ *                     metode_pembayaran:
+ *                       type: string
+ *                       example: "cash"
+ *                     status_pembayaran:
+ *                       type: string
+ *                       example: "lunas"
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         nama:
+ *                           type: string
+ *                         jabatan:
+ *                           type: string
+ *                         nomor_identitas:
+ *                           type: string
  *                 message:
  *                   type: string
  *                   example: "Faktur updated successfully"
@@ -355,8 +476,16 @@ router.post('/', upload.single('bukti_pembayaran'), authMiddleware, FakturContro
  *                 status: 200
  *                 data:
  *                   id: "6f9026b0-8ba6-44ed-a725-688921111b87"
- *                   bukti_pembayaran: "http://192.168.1.4:9000/faktur/1739205465983-images.jpeg"
+ *                   bukti_pembayaran: "http://bucket-production-2f24.up.railway.app:443/faktur/1739205465983-images.jpeg"
  *                   deskripsi: "test"
+ *                   jumlah_pengeluaran: 1000
+ *                   metode_pembayaran: "cash"
+ *                   status_pembayaran: "lunas"
+ *                   user:
+ *                     id: "443c97ea-6df0-4850-9e0a-ab6e908d89ac"
+ *                     nama: "Arafie"
+ *                     jabatan: "presiden kerajaan mueshern"
+ *                     nomor_identitas: "2111500340"
  *                 message: "Faktur updated successfully"
  *       404:
  *         description: "Faktur tidak ditemukan"
@@ -386,6 +515,7 @@ router.post('/', upload.single('bukti_pembayaran'), authMiddleware, FakturContro
  *                   example: "Internal server error"
  */
 router.patch('/:id', upload.single('bukti_pembayaran'), authMiddleware, FakturController.updateFaktur);
+
 
 
 /**

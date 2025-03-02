@@ -1,4 +1,4 @@
-import { Faktur, NomorSurat } from "@prisma/client";
+import { Faktur, User } from "@prisma/client";
 
 export type PaginatedResponse<T> = {
     data: T[];
@@ -15,25 +15,55 @@ export type PaginatedResponse<T> = {
 };
 
 export type CreateFakturRequest = {
-    bukti_pembayaran: string;
+    bukti_pembayaran?: string;
     deskripsi: string;
-};
-export type UpdateNomorSuraRequest = {
-    bukti_pembayaran: string;
-    deskripsi: string;
+    jumlah_pengeluaran?: number; 
+    metode_pembayaran: string;
+    status_pembayaran: string;
 };
 
+export type UpdateFakturRequest = {
+    bukti_pembayaran?: string;   
+    deskripsi: string;          
+    jumlah_pengeluaran: number; 
+    metode_pembayaran?: string;  
+    status_pembayaran?: string;  
+};
+
+export type UserResponse = {
+    id: string,
+    nama: string;
+    jabatan: string;
+    nomor_identitas: string;
+};
 
 export type FakturResponse = {
     id: string;
     bukti_pembayaran: string;
     deskripsi: string;
+    jumlah_pengeluaran?: number; 
+    metode_pembayaran: string;
+    status_pembayaran: string;
+    user?: UserResponse; 
 };
 
-export function toFakturResponse(faktur: Faktur): FakturResponse {
+export function toUserResponse(user: User): UserResponse {
+    return {
+        id: user.id,
+        nama: user.nama,
+        jabatan: user.jabatan || "",
+        nomor_identitas: user.nomor_identitas,
+    };
+}
+
+export function toFakturResponse(faktur: Faktur & { user?: User }): FakturResponse {
     return {
         id: faktur.id,
         bukti_pembayaran: faktur.bukti_pembayaran,
         deskripsi: faktur.deskripsi,
-    }
+        jumlah_pengeluaran: faktur.jumlah_pengeluaran ? Number(faktur.jumlah_pengeluaran) : undefined,
+        metode_pembayaran: faktur.metode_pembayaran,
+        status_pembayaran: faktur.status_pembayaran,
+        user: faktur.user ? toUserResponse(faktur.user) : undefined, 
+    };
 }
