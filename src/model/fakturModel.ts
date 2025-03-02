@@ -44,6 +44,7 @@ export type FakturResponse = {
     jumlah_pengeluaran?: number; 
     metode_pembayaran: string;
     status_pembayaran: string;
+    createdAt: string;
     user?: UserResponse; 
 };
 
@@ -65,5 +66,6 @@ export function toFakturResponse(faktur: Faktur & { user?: User }): FakturRespon
         metode_pembayaran: faktur.metode_pembayaran,
         status_pembayaran: faktur.status_pembayaran,
         user: faktur.user ? toUserResponse(faktur.user) : undefined, 
+        createdAt: faktur.createdAt.toISOString(),
     };
 }
