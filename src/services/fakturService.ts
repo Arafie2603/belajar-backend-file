@@ -8,6 +8,7 @@ import { error } from 'console';
 import moment from 'moment';
 import { normalizeDate } from '../helper/normalizeDate';
 import { Validation } from '../validation/validation';
+import Decimal from "decimal.js";
 
 const prismaClient = new PrismaClient();
 const BUCKET_NAME = "faktur";
@@ -37,7 +38,7 @@ export class FakturService {
             let fileUrl = "";
             const validatedRequest = Validation.validate(fakturValidation.CreateFakturValidation, {
                 ...request,
-                jumlah_pengeluaran: request.jumlah_pengeluaran ? Number(request.jumlah_pengeluaran) : undefined
+                jumlah_pengeluaran: request.jumlah_pengeluaran ? new Decimal(request.jumlah_pengeluaran) : undefined
             });
 
             if (file) {

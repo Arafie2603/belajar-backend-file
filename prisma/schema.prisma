@@ -66,7 +66,7 @@ model TokenBlacklist {
 
 model Faktur {
   id String @id @default(uuid())
-  jumlah_pengeluaran Decimal?
+  jumlah_pengeluaran Decimal? @db.Decimal(10, 2)
   bukti_pembayaran String
   metode_pembayaran String
   status_pembayaran String
