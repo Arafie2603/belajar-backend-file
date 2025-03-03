@@ -53,12 +53,18 @@ export class FakturService {
                 fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
             }
 
-            const parsedTanggal = validatedRequest.tanggal
-                ? moment(validatedRequest.tanggal, [
-                    "YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY", "YYYY/MM/DD",
-                    "D/M/YYYY", "DD/M/YYYY", "D/MM/YYYY", "DD/MM/YYYY"
-                ]).toDate()
-                : new Date();
+
+            console.log("Request body in controller:", validatedRequest.tanggal);
+
+            const parsedTanggal = moment(validatedRequest.tanggal, ["DD/MM/YYYY", "D/M/YYYY"], true);
+
+            if (!parsedTanggal.isValid()) {
+                throw new Error("Invalid date format. Please use DD/MM/YYYY.");
+            }
+
+            const finalTanggal = moment.utc(parsedTanggal).toDate();
+
+
 
             console.log('Input date:', validatedRequest.tanggal);
             console.log('Parsed date:', parsedTanggal);
