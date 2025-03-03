@@ -70,9 +70,11 @@ model Faktur {
   bukti_pembayaran String
   metode_pembayaran String
   status_pembayaran String
-  createdAt DateTime @default(now())
+  createdAt DateTime?
+  updated_by String?
+  created_by String?
   deskripsi String
-  user_id String   // Pastikan ini sesuai dengan tipe data dari ID pengguna
+  user_id String 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
 }
@@ -82,6 +84,9 @@ model NomorSurat {
   kategori String
   keterangan String
   deskripsi String
+  created_by String
+  updated_by String
+  createdAt DateTime @default(now())
   suratKeluar SuratKeluar[]
 }
 

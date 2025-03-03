@@ -133,6 +133,8 @@ export class FakturService {
                 bukti_pembayaran: fileUrl,
             });
 
+            const findUser = await prismaClient.user.findFirst({ where: { id } });
+
             const faktur = await prismaClient.faktur.update({
                 where: { id },
                 data: {
@@ -140,6 +142,7 @@ export class FakturService {
                     jumlah_pengeluaran: validateRequest.jumlah_pengeluaran,
                     metode_pembayaran: validateRequest.metode_pembayaran,
                     status_pembayaran: validateRequest.status_pembayaran,
+                    created_by: findUser?.nama || "",
                     user: {
                         connect: { id: userId }
                     }
