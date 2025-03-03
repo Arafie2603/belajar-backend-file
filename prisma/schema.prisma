@@ -70,7 +70,7 @@ model Faktur {
   bukti_pembayaran String
   metode_pembayaran String
   status_pembayaran String
-  createdAt DateTime?
+  tanggal DateTime?
   updated_by String?
   created_by String?
   deskripsi String
@@ -84,8 +84,8 @@ model NomorSurat {
   kategori String
   keterangan String
   deskripsi String
-  created_by String
-  updated_by String
+  created_by String?
+  updated_by String?
   createdAt DateTime @default(now())
   suratKeluar SuratKeluar[]
 }

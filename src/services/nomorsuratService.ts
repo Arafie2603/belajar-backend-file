@@ -1,8 +1,10 @@
+import moment from "moment";
 import { prismaClient } from "../application/database";
 import { responseError } from "../error/responseError";
 import { CreateNomorSurat, NomorSuratResponse, PaginatedResponse, toNomorSuratResponse, UpdateNomorSuraRequest } from "../model/nomorsuratModel";
 import { nomorValidation } from "../validation/nomorValidation";
 import { Validation } from "../validation/validation";
+import { normalizeDate } from "../helper/normalizeDate";
 
 export class nomorService {
     static async getAllnomorSurat(
@@ -52,18 +54,17 @@ export class nomorService {
         const existingNomorSurat = await prismaClient.nomorSurat.findUnique({
             where: { nomor_surat: id }
         });
-    
+
         if (!existingNomorSurat) {
             throw new responseError(404, `NomorSurat with ID ${id} not found`);
         }
-    
+
         return toNomorSuratResponse(existingNomorSurat);
     }
-    
-    static async createNomorSurat(request: CreateNomorSurat): Promise<NomorSuratResponse> {
-        const validateRequest = Validation.validate(nomorValidation.NomorValidation, request);
-        
-        // Definisikan mapping keterangan ke kategori
+
+    static async createNomorSurat(request: CreateNomorSurat, userId: string): Promise<NomorSuratResponse> {
+        const validatedRequest = Validation.validate(nomorValidation.NomorValidation, request);
+
         const kategoriMap: { [key: string]: string } = {
             H: "Perbaikan",
             SA: "Sertifikat Asisten",
@@ -71,20 +72,16 @@ export class nomorService {
             P: "Formulir pendaftaran calas",
             S: "SK Asisten",
         };
-    
-        // Isi kategori berdasarkan keterangan
-        const kategori = kategoriMap[validateRequest.keterangan] || "Lainnya";
-    
-        // Mendapatkan jumlah data saat ini dari NomorSurat
+
+        const kategori = kategoriMap[validatedRequest.keterangan] || "Lainnya";
+
         const countNomorSurat = await prismaClient.nomorSurat.count();
-        const newNomorSuratNumber = (countNomorSurat + 1).toString().padStart(2, '0'); // Tambahkan 0 di depan jika satu digit
-    
-        // Mendapatkan bulan dan tahun saat ini dalam format yang diinginkan
+        const newNomorSuratNumber = (countNomorSurat + 1).toString().padStart(2, '0');
         const now = new Date();
-        const month = (now.getMonth() + 1).toString().padStart(2, "0"); // Format bulan jadi 2 digit
-        const year = now.getFullYear().toString().slice(-2); // Ambil 2 digit terakhir tahun
-    
-        // Mapping keterangan ke format prefix nomor surat
+        const month = (now.getMonth() + 1).toString().padStart(2, "0");
+        const year = now.getFullYear().toString().slice(-2);
+        const findUser = await prismaClient.user.findFirst({ where: { id: userId } });
+
         const prefixMap: { [key: string]: string } = {
             H: "H",
             SA: "SA",
@@ -92,38 +89,41 @@ export class nomorService {
             P: "P",
             S: "S",
         };
-    
-        const prefix = prefixMap[validateRequest.keterangan] || "XX";
-    
-        // Format nomor surat sesuai aturan
+        const parsedCreatedAt = validatedRequest.createdAt
+            ? moment(validatedRequest.createdAt, ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY/MM/DD"]).toDate()
+            : new Date();
+
+        const prefix = prefixMap[validatedRequest.keterangan] || "XX";
+
         const nomorSuratFormat = `${prefix}/UBL/LAB/${newNomorSuratNumber}/${month}/${year}`;
-    
-        // Periksa apakah nomor surat sudah ada
+
         const existingNomorSurat = await prismaClient.nomorSurat.findUnique({
             where: { nomor_surat: nomorSuratFormat }
         });
-    
+
         if (existingNomorSurat) {
             throw new responseError(400, `NomorSurat with format ${nomorSuratFormat} already exists`);
         }
-    
-        // Membuat nomor surat baru
+
         const nomorSurat = await prismaClient.nomorSurat.create({
             data: {
-                nomor_surat: nomorSuratFormat, // Gunakan format nomor surat yang sesuai aturan
-                keterangan: validateRequest.keterangan,
-                deskripsi: validateRequest.deskripsi,
-                kategori: kategori, // Gunakan kategori yang otomatis diisi
+                nomor_surat: nomorSuratFormat,
+                keterangan: validatedRequest.keterangan,
+                deskripsi: validatedRequest.deskripsi,
+                kategori: kategori,
+                created_by: findUser?.nama || "",
+                createdAt: parsedCreatedAt,
             }
         });
         return toNomorSuratResponse(nomorSurat);
     }
-    
+
 
 
     static async updateNomorSurat(
         id: string,
-        request: UpdateNomorSuraRequest
+        request: UpdateNomorSuraRequest,
+        userId: string,
     ): Promise<NomorSuratResponse> {
         const existingNomorSurat = await prismaClient.nomorSurat.findUnique({
             where: { nomor_surat: id }
@@ -133,9 +133,9 @@ export class nomorService {
             throw new responseError(404, `NomorSurat with ID ${id} not found`);
         }
     
-        const validateRequest = Validation.validate(nomorValidation.UpdateNomorValidation, request);
+        const validatedRequest = Validation.validate(nomorValidation.UpdateNomorValidation, request);
+        const findUser = await prismaClient.user.findFirst({ where: { id: userId } });
     
-        // Definisikan mapping keterangan ke kategori dan prefix
         const kategoriMap: { [key: string]: string } = {
             H: "Perbaikan",
             SA: "Sertifikat Asisten",
@@ -143,7 +143,7 @@ export class nomorService {
             P: "Formulir pendaftaran calas",
             S: "SK Asisten",
         };
-        
+    
         const prefixMap: { [key: string]: string } = {
             H: "H",
             SA: "SA",
@@ -152,18 +152,33 @@ export class nomorService {
             S: "S",
         };
     
-        if (validateRequest.keterangan) {
-            validateRequest.kategori = kategoriMap[validateRequest.keterangan] || "Lainnya";
-            const newPrefix = prefixMap[validateRequest.keterangan] || "XX";
-            
+        if (validatedRequest.keterangan) {
+            validatedRequest.kategori = kategoriMap[validatedRequest.keterangan] || "Lainnya";
+            const newPrefix = prefixMap[validatedRequest.keterangan] || "XX";
+    
             const nomorSuratParts = existingNomorSurat.nomor_surat.split('/');
             nomorSuratParts[0] = newPrefix;
-            validateRequest.nomor_surat = nomorSuratParts.join('/');
+            validatedRequest.nomor_surat = nomorSuratParts.join('/');
         }
+    
+        if (!validatedRequest.tanggal) {
+            validatedRequest.tanggal = new Date().toISOString();
+        } else {
+            const normalizedDate = normalizeDate(validatedRequest.tanggal);
+            validatedRequest.tanggal = normalizedDate || new Date().toISOString();
+        }
+        
+        const parsedCreatedAt = validatedRequest.createdAt
+            ? moment(validatedRequest.createdAt, ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY/MM/DD"]).toDate()
+            : new Date();
     
         const updatedNomorSurat = await prismaClient.nomorSurat.update({
             where: { nomor_surat: id },
-            data: validateRequest,
+            data: {
+                ...validatedRequest,
+                createdAt: parsedCreatedAt,
+                updated_by: findUser?.nama,
+            },
         });
     
         return toNomorSuratResponse(updatedNomorSurat);
@@ -173,15 +188,15 @@ export class nomorService {
         const existingNomorSurat = await prismaClient.nomorSurat.findUnique({
             where: { nomor_surat: id }
         });
-    
+
         if (!existingNomorSurat) {
             throw new responseError(404, `NomorSurat with ID ${id} not found`);
         }
-    
+
         await prismaClient.nomorSurat.delete({
             where: { nomor_surat: id }
         });
     }
-    
+
 
 }

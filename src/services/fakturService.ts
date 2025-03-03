@@ -5,6 +5,9 @@ import { fakturValidation } from '../validation/fakturValidation';
 import { z, ZodError } from 'zod';
 import { MINIO_ENDPOINT, MINIO_PORT, minioClient } from '../helper/minioClient';
 import { error } from 'console';
+import moment from 'moment';
+import { normalizeDate } from '../helper/normalizeDate';
+import { Validation } from '../validation/validation';
 
 const prismaClient = new PrismaClient();
 const BUCKET_NAME = "faktur";
@@ -22,14 +25,17 @@ export class FakturService {
             throw new responseError(500, "Failed to delete file from storage");
         }
     }
+
     static async createFaktur(
         request: CreateFakturRequest,
         userId: string,
         file?: Express.Multer.File,
     ): Promise<FakturResponse> {
         try {
+            const findUser = await prismaClient.user.findFirst({ where: { id: userId } });
+
             let fileUrl = "";
-            const validatedRequest = fakturValidation.CreateFakturValidation.parse({
+            const validatedRequest = Validation.validate(fakturValidation.CreateFakturValidation, {
                 ...request,
                 jumlah_pengeluaran: request.jumlah_pengeluaran ? Number(request.jumlah_pengeluaran) : undefined
             });
@@ -46,10 +52,22 @@ export class FakturService {
                 fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
             }
 
+            const parsedTanggal = validatedRequest.tanggal
+                ? moment(validatedRequest.tanggal, [
+                    "YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY", "YYYY/MM/DD",
+                    "D/M/YYYY", "DD/M/YYYY", "D/MM/YYYY", "DD/MM/YYYY"
+                ]).toDate()
+                : new Date();
+
+            console.log('Input date:', validatedRequest.tanggal);
+            console.log('Parsed date:', parsedTanggal);
+
             const faktur = await prismaClient.faktur.create({
                 data: {
                     ...validatedRequest,
                     bukti_pembayaran: fileUrl || "",
+                    created_by: findUser?.nama || "",
+                    tanggal: parsedTanggal,
                     user: {
                         connect: { id: userId }
                     }
@@ -75,28 +93,6 @@ export class FakturService {
         }
     }
 
-
-
-    static async getFakturById(id: string): Promise<FakturResponse> {
-        try {
-            const faktur = await prismaClient.faktur.findUnique({ 
-                where: { id },
-                include: { user: true },
-            });
-            if (!faktur) {
-                throw new responseError(404, `Faktur with ID ${id} not found`);
-            }
-            return toFakturResponse(faktur);
-        } catch (error) {
-            console.error('Error retrieving faktur:', error);
-            if (error instanceof ZodError) {
-                throw new responseError(400, 'Validation Error: ' + error.errors.map(e => e.message).join(', '));
-            } else if (error instanceof responseError) {
-                throw error;
-            }
-            throw new responseError(500, 'Internal server error');
-        }
-    }
 
     static async updateFaktur(
         id: string,
@@ -128,21 +124,27 @@ export class FakturService {
                 fileUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${BUCKET_NAME}/${filename}`;
             }
 
-            const validateRequest = fakturValidation.UpdateFakturValidation.parse({
+            const validatedRequest = Validation.validate(fakturValidation.UpdateFakturValidation, {
                 ...request,
                 bukti_pembayaran: fileUrl,
             });
 
-            const findUser = await prismaClient.user.findFirst({ where: { id } });
+            const findUser = await prismaClient.user.findFirst({ where: { id: userId } });
+
+            // Parse tanggal to handle various date formats
+            const parsedTanggal = validatedRequest.tanggal
+                ? moment(validatedRequest.tanggal, ["YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY", "YYYY/MM/DD"]).toDate()
+                : new Date();
 
             const faktur = await prismaClient.faktur.update({
                 where: { id },
                 data: {
-                    ...validateRequest,
-                    jumlah_pengeluaran: validateRequest.jumlah_pengeluaran,
-                    metode_pembayaran: validateRequest.metode_pembayaran,
-                    status_pembayaran: validateRequest.status_pembayaran,
-                    created_by: findUser?.nama || "",
+                    ...validatedRequest,
+                    jumlah_pengeluaran: validatedRequest.jumlah_pengeluaran,
+                    metode_pembayaran: validatedRequest.metode_pembayaran,
+                    status_pembayaran: validatedRequest.status_pembayaran,
+                    updated_by: findUser?.nama || "",
+                    tanggal: parsedTanggal,
                     user: {
                         connect: { id: userId }
                     }
@@ -157,6 +159,28 @@ export class FakturService {
                 throw error;
             }
             console.error('Error updating faktur:', error);
+            throw new responseError(500, 'Internal server error');
+        }
+    }
+
+
+    static async getFakturById(id: string): Promise<FakturResponse> {
+        try {
+            const faktur = await prismaClient.faktur.findUnique({
+                where: { id },
+                include: { user: true },
+            });
+            if (!faktur) {
+                throw new responseError(404, `Faktur with ID ${id} not found`);
+            }
+            return toFakturResponse(faktur);
+        } catch (error) {
+            console.error('Error retrieving faktur:', error);
+            if (error instanceof ZodError) {
+                throw new responseError(400, 'Validation Error: ' + error.errors.map(e => e.message).join(', '));
+            } else if (error instanceof responseError) {
+                throw error;
+            }
             throw new responseError(500, 'Internal server error');
         }
     }
@@ -208,7 +232,7 @@ export class FakturService {
                 take,
                 where,
                 orderBy: {
-                    createdAt: 'desc',
+                    tanggal: 'desc',
                 },
                 include: { user: true }
             }),

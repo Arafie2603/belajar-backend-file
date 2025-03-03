@@ -62,11 +62,16 @@ export class nomorsuratController {
     static async createnomorSurat(req: Request, res: Response): Promise<void> {
         try {
             const request = req.body;
-            console.log('Headers:', req.headers['content-type']);
-            console.log('Body:', req.body);
+            if (!req.user) {
+                res.status(401).json({
+                    status: 401,
+                    message: 'User not authenticated',
+                });
+                return;
+            }
             
             console.log(request);
-            const nomorSurat = await nomorService.createNomorSurat(request);
+            const nomorSurat = await nomorService.createNomorSurat(request, req.user.id);
             res.status(200).json({
                 status: 200,
                 data: nomorSurat,
@@ -86,7 +91,14 @@ export class nomorsuratController {
         const request: UpdateNomorSuraRequest = req.body;
 
         try {
-            const updatedNomorSurat = await nomorService.updateNomorSurat(id, request);
+            if (!req.user) {
+                res.status(401).json({
+                    status: 401,
+                    message: 'User not authenticated',
+                });
+                return;
+            }
+            const updatedNomorSurat = await nomorService.updateNomorSurat(id, request, req.user.id);
             res.status(200).json({
                 message: "NomorSurat updated successfully",
                 data: updatedNomorSurat

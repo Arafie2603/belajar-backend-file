@@ -10,6 +10,7 @@ export class FakturController {
                 res.status(401).json({ status: 401, message: 'Unauthorized' });
                 return;
             }
+            console.log('Request body in controller:', req.body.tanggal);
     
             const faktur = await FakturService.createFaktur(req.body, req.user.id, req.file);
             res.status(201).json({
